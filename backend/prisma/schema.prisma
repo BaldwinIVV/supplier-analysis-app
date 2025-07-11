@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  analyses Analysis[]
+
+  @@map("users")
+}
+
+model Analysis {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      AnalysisStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suppliers   Supplier[]
+  messages    Message[]
+
+  @@map("analyses")
+}
+
+model Supplier {
+  id            String   @id @default(cuid())
+  name          String
+  product       String
+  quantity      Int
+  quality       Float
+  deliveryDelay Int
+  price         Float
+  deliveryDate  DateTime
+  performance   Float?
+  category      SupplierCategory?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  analysisId    String
+  analysis      Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@map("suppliers")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  type      MessageType
+  content   String
+  recipient String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  analysisId String
+  analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SupplierCategory {
+  EXCELLENT
+  GOOD
+  AVERAGE
+  POOR
+  CRITICAL
+}
+
+enum MessageType {
+  SUPPLIER
+  BUYER
+  MANAGEMENT
+} 

@@ -1,0 +1,11 @@
+fournisseur,produit,quantite,qualite,delai,prix,date_livraison
+Fournisseur A,Produit 1,100,8.5,5,150.50,2024-01-15
+Fournisseur B,Produit 2,75,7.2,8,120.00,2024-01-20
+Fournisseur C,Produit 3,200,9.1,3,180.75,2024-01-12
+Fournisseur D,Produit 1,50,6.8,12,95.25,2024-01-25
+Fournisseur E,Produit 4,150,8.9,4,220.00,2024-01-18
+Fournisseur F,Produit 2,80,7.5,7,135.50,2024-01-22
+Fournisseur G,Produit 3,120,9.3,2,195.00,2024-01-10
+Fournisseur H,Produit 1,90,6.2,15,85.75,2024-01-28
+Fournisseur I,Produit 4,180,8.7,6,210.25,2024-01-16
+Fournisseur J,Produit 2,60,7.8,9,125.00,2024-01-24 
