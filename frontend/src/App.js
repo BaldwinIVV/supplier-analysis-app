@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History } from 'lucide-react';
+import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History, X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const SupplierAnalysisApp = () => {
   const [currentView, setCurrentView] = useState('login');
@@ -8,6 +8,8 @@ const SupplierAnalysisApp = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [analysisHistory, setAnalysisHistory] = useState([]);
+  const [selectedKPI, setSelectedKPI] = useState(null);
+  const [showKPIModal, setShowKPIModal] = useState(false);
 
   // URL de l'API backend déployée sur Render
   const API_URL = 'https://supplier-analysis-app.onrender.com';
@@ -98,7 +100,92 @@ const SupplierAnalysisApp = () => {
     setAnalysisHistory([]);
   };
 
-  // Traitement des fichiers
+  // Données mockées pour les graphiques détaillés
+  const getKPIDetails = (kpiType) => {
+    switch (kpiType) {
+      case 'delivery':
+        return {
+          title: 'Analyse des Livraisons',
+          subtitle: 'Performances de ponctualité par mois',
+          data: [
+            { mois: 'Jan', ponctuel: 82, retard: 18 },
+            { mois: 'Fév', ponctuel: 85, retard: 15 },
+            { mois: 'Mar', ponctuel: 87, retard: 13 },
+            { mois: 'Avr', ponctuel: 90, retard: 10 },
+            { mois: 'Mai', ponctuel: 88, retard: 12 },
+            { mois: 'Jun', ponctuel: 91, retard: 9 }
+          ],
+          insights: [
+            '📈 Amélioration constante depuis janvier',
+            '🎯 Objectif 95% presque atteint en juin',
+            '⚠️ Attention aux pics de retard en mars'
+          ]
+        };
+      case 'quality':
+        return {
+          title: 'Analyse Qualité',
+          subtitle: 'Répartition des problèmes qualité',
+          data: [
+            { name: 'Conformité', value: 94, color: '#10B981' },
+            { name: 'Défauts mineurs', value: 4, color: '#F59E0B' },
+            { name: 'Défauts majeurs', value: 2, color: '#EF4444' }
+          ],
+          insights: [
+            '✅ Excellent taux de conformité (94%)',
+            '🔧 Défauts principalement mineurs',
+            '📋 Processus qualité bien maîtrisé'
+          ]
+        };
+      case 'orders':
+        return {
+          title: 'Volume des Commandes',
+          subtitle: 'Évolution du nombre de commandes',
+          data: [
+            { mois: 'Jan', commandes: 18, statut: 'Stable' },
+            { mois: 'Fév', commandes: 22, statut: 'Croissance' },
+            { mois: 'Mar', commandes: 20, statut: 'Légère baisse' },
+            { mois: 'Avr', commandes: 25, statut: 'Pic' },
+            { mois: 'Mai', commandes: 21, statut: 'Normalisation' },
+            { mois: 'Jun', commandes: 19, statut: 'Stable' }
+          ],
+          insights: [
+            '📊 Moyenne de 21 commandes/mois',
+            '📈 Pic d\'activité en avril',
+            '🔄 Tendance stable globalement'
+          ]
+        };
+      case 'costs':
+        return {
+          title: 'Analyse des Coûts',
+          subtitle: 'Répartition des coûts par type de problème',
+          data: [
+            { type: 'Retards livraison', cout: 8420, pourcentage: 55 },
+            { type: 'Défauts qualité', cout: 4200, pourcentage: 27 },
+            { type: 'Non-conformités', cout: 2100, pourcentage: 14 },
+            { type: 'Autres', cout: 700, pourcentage: 4 }
+          ],
+          insights: [
+            '💰 Principal coût : retards de livraison',
+            '🎯 Objectif : réduire de 20% d\'ici 3 mois',
+            '📉 Tendance à la baisse depuis avril'
+          ]
+        };
+      default:
+        return null;
+    }
+  };
+
+  // Fonction pour ouvrir la modale KPI
+  const openKPIModal = (kpiType) => {
+    setSelectedKPI(getKPIDetails(kpiType));
+    setShowKPIModal(true);
+  };
+
+  // Fermer la modale
+  const closeKPIModal = () => {
+    setShowKPIModal(false);
+    setSelectedKPI(null);
+  };
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -335,6 +422,125 @@ const SupplierAnalysisApp = () => {
           )}
         </div>
       </div>
+
+      {/* Modale KPI détaillée */}
+      {showKPIModal && selectedKPI && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">{selectedKPI.title}</h2>
+                <p className="text-gray-600">{selectedKPI.subtitle}</p>
+              </div>
+              <button
+                onClick={closeKPIModal}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Graphiques selon le type de KPI */}
+              {selectedKPI.title === 'Analyse des Livraisons' && (
+                <div className="mb-6">
+                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600">Graphique des livraisons par mois</p>
+                      <p className="text-sm text-gray-500">87% de ponctualité moyenne</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedKPI.title === 'Analyse Qualité' && (
+                <div className="mb-6">
+                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <Target className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600">Répartition qualité</p>
+                      <div className="flex justify-center gap-4 mt-2 text-sm">
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded">✅ 94% Conforme</span>
+                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded">❌ 6% Non-conforme</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedKPI.title === 'Volume des Commandes' && (
+                <div className="mb-6">
+                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <Package className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600">Évolution des commandes</p>
+                      <p className="text-sm text-gray-500">125 commandes au total</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedKPI.title === 'Analyse des Coûts' && (
+                <div className="mb-6">
+                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <Euro className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600">Répartition des coûts</p>
+                      <div className="mt-3 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Retards livraison:</span>
+                          <span className="font-semibold">8,420€</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Défauts qualité:</span>
+                          <span className="font-semibold">4,200€</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Non-conformités:</span>
+                          <span className="font-semibold">2,100€</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Insights */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2 text-blue-600" />
+                  Insights et Recommandations
+                </h3>
+                <div className="space-y-2">
+                  {selectedKPI.insights.map((insight, index) => (
+                    <p key={index} className="text-sm text-gray-700 flex items-start">
+                      <span className="mr-2">•</span>
+                      {insight}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 mt-6">
+                <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <Download className="h-4 w-4 mr-2" />
+                  Exporter les données
+                </button>
+                <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Partager le rapport
+                </button>
+                <button className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Programmer un suivi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     );
   };
 
@@ -570,49 +776,65 @@ const SupplierAnalysisApp = () => {
 
       {/* KPIs Dashboard */}
       <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
+          onClick={() => openKPIModal('delivery')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Livraisons à temps</p>
               <p className="text-2xl font-bold text-orange-600">
                 {analysisResults.on_time_rate}%
               </p>
+              <p className="text-xs text-gray-500 mt-1">📈 Cliquez pour détails</p>
             </div>
             <Clock className="h-8 w-8 text-orange-600" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
+          onClick={() => openKPIModal('quality')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Score qualité</p>
               <p className="text-2xl font-bold text-blue-600">
                 {analysisResults.quality_rate}%
               </p>
+              <p className="text-xs text-gray-500 mt-1">📊 Cliquez pour détails</p>
             </div>
             <Target className="h-8 w-8 text-blue-600" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
+          onClick={() => openKPIModal('orders')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Commandes totales</p>
               <p className="text-2xl font-bold text-green-600">
                 {analysisResults.total_orders}
               </p>
+              <p className="text-xs text-gray-500 mt-1">📦 Cliquez pour détails</p>
             </div>
             <BarChart3 className="h-8 w-8 text-green-600" />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div 
+          className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
+          onClick={() => openKPIModal('costs')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Coût des problèmes</p>
               <p className="text-2xl font-bold text-red-600">
                 {analysisResults.total_cost_issues}€
               </p>
+              <p className="text-xs text-gray-500 mt-1">💰 Cliquez pour détails</p>
             </div>
             <AlertTriangle className="h-8 w-8 text-red-600" />
           </div>
