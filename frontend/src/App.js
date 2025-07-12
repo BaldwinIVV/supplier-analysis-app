@@ -167,6 +167,9 @@ const SupplierAnalysisApp = () => {
     };
   };
 
+  // URL de l'API backend
+  const API_URL = 'https://supplier-analysis-app.onrender.com';
+
   // Données pour les modales KPI avec graphiques réels
   const getKPIDetails = (kpiType) => {
     switch (kpiType) {
