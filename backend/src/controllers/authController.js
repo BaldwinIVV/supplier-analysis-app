@@ -16,6 +16,8 @@ const generateToken = (userId) => {
 
 // Register user
 const register = async (req, res) => {
+  console.log('Requête reçue pour inscription :', req.body);
+
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
