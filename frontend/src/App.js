@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, 
-  Users, Mail, BarChart3, Download, LogOut, User, Home, History, 
-  X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle, 
-  Plus, Menu, Search, ChevronRight, Brain, Zap, Bell, TrendingDown,
-  Shield, Eye, MessageSquare, ArrowRight, Star, Lightbulb
-} from 'lucide-react';
+import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History, X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle, Plus, Menu, Search, ChevronRight } from 'lucide-react';
 
 const SupplierAnalysisApp = () => {
   const [currentView, setCurrentView] = useState('login');
@@ -20,7 +14,6 @@ const SupplierAnalysisApp = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [pageTransition, setPageTransition] = useState(false);
-  const [showAIPanel, setShowAIPanel] = useState(false);
 
   // États pour la connexion/inscription
   const [email, setEmail] = useState('');
@@ -221,7 +214,7 @@ const SupplierAnalysisApp = () => {
       if (response.ok) {
         setUser(data.user);
         localStorage.setItem('token', data.token);
-        navigateTo('dashboard');
+        setCurrentView('dashboard');
         loadAnalysisHistory(data.token);
         return true;
       } else {
@@ -245,7 +238,7 @@ const SupplierAnalysisApp = () => {
       if (response.ok) {
         setUser(data.user);
         localStorage.setItem('token', data.token);
-        navigateTo('dashboard');
+        setCurrentView('dashboard');
         return true;
       } else {
         setError(data.message || 'Registration failed');
@@ -394,7 +387,7 @@ const SupplierAnalysisApp = () => {
       })
       .then(data => {
         setUser(data.user);
-        navigateTo('dashboard');
+        setCurrentView('dashboard');
         loadAnalysisHistory(token);
       })
       .catch(() => {
@@ -410,7 +403,7 @@ const SupplierAnalysisApp = () => {
         <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
           <div className="mx-auto w-full max-w-sm lg:w-96">
             <div className="text-center mb-8">
-              <div className="mx-auto w-12 h-12 bg-black rounded-lg flex items-center justify-center mb-6 transform transition-all duration-300 hover:scale-110">
+              <div className="mx-auto w-12 h-12 bg-black rounded-lg flex items-center justify-center mb-6">
                 <BarChart3 className="h-6 w-6 text-white" />
               </div>
               <h2 className="text-3xl font-bold tracking-tight text-gray-900">
@@ -422,7 +415,7 @@ const SupplierAnalysisApp = () => {
             </div>
 
             {error && (
-              <div className="mb-4 rounded-md bg-red-50 p-4 transition-all duration-300">
+              <div className="mb-4 rounded-md bg-red-50 p-4">
                 <div className="text-sm text-red-700">{error}</div>
               </div>
             )}
@@ -443,7 +436,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
                         placeholder="Enter your email"
                       />
                     </div>
@@ -462,7 +455,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
                         placeholder="Enter your password"
                       />
                     </div>
@@ -472,7 +465,7 @@ const SupplierAnalysisApp = () => {
                     <button
                       type="submit"
                       disabled={isLoggingIn}
-                      className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
+                      className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
                     >
                       {isLoggingIn ? 'Signing in...' : 'Sign in'}
                     </button>
@@ -492,7 +485,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={registerData.firstName}
                         onChange={(e) => setRegisterData({...registerData, firstName: e.target.value})}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
                       />
                     </div>
                     <div>
@@ -506,7 +499,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={registerData.lastName}
                         onChange={(e) => setRegisterData({...registerData, lastName: e.target.value})}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
                       />
                     </div>
                   </div>
@@ -522,7 +515,7 @@ const SupplierAnalysisApp = () => {
                       required
                       value={registerData.email}
                       onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
                     />
                   </div>
 
@@ -537,7 +530,7 @@ const SupplierAnalysisApp = () => {
                       required
                       value={registerData.password}
                       onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
                     />
                   </div>
 
@@ -552,14 +545,14 @@ const SupplierAnalysisApp = () => {
                       required
                       value={registerData.confirmPassword}
                       onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={isLoggingIn}
-                    className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
+                    className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
                   >
                     {isLoggingIn ? 'Creating account...' : 'Create account'}
                   </button>
@@ -570,7 +563,7 @@ const SupplierAnalysisApp = () => {
                 <button
                   type="button"
                   onClick={() => setIsRegisterMode(!isRegisterMode)}
-                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-gray-900"
                 >
                   {isRegisterMode 
                     ? 'Already have an account? Sign in' 
@@ -594,7 +587,7 @@ const SupplierAnalysisApp = () => {
         <div className="hidden lg:block relative flex-1 bg-gray-50">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <BarChart3 className="mx-auto h-32 w-32 text-gray-300 mb-8 transform transition-all duration-300 hover:scale-110" />
+              <BarChart3 className="mx-auto h-32 w-32 text-gray-300 mb-8" />
               <h3 className="text-2xl font-semibold text-gray-700 mb-4">
                 Supplier Performance Analytics
               </h3>
@@ -608,14 +601,14 @@ const SupplierAnalysisApp = () => {
     );
   }
 
-  // Interface principale style ChatGPT avec animations
+  // Interface principale style ChatGPT
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar avec animations */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900 text-white transition-all duration-200 flex flex-col`}>
         <div className="p-4">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center transform transition-all duration-300 hover:scale-110">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
               <BarChart3 className="h-5 w-5 text-gray-900" />
             </div>
             {sidebarOpen && (
@@ -646,24 +639,11 @@ const SupplierAnalysisApp = () => {
             {sidebarOpen && <span>Analysis History</span>}
             {sidebarOpen && currentView === 'history' && <ChevronRight className="h-4 w-4 ml-auto" />}
           </button>
-
-          {analysisResults && (
-            <button
-              onClick={() => setShowAIPanel(!showAIPanel)}
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200 transform hover:scale-105 ${
-                showAIPanel ? 'bg-purple-800 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
-              <Brain className="h-5 w-5" />
-              {sidebarOpen && <span>AI Insights</span>}
-              {sidebarOpen && <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">NEW</span>}
-            </button>
-          )}
         </nav>
 
         <div className="p-4 border-t border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center transform transition-all duration-300 hover:scale-110">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
               <User className="h-5 w-5" />
             </div>
             {sidebarOpen && (
@@ -671,7 +651,7 @@ const SupplierAnalysisApp = () => {
                 <p className="text-sm font-medium">{user?.firstName || user?.email}</p>
                 <button
                   onClick={handleLogout}
-                  className="text-xs text-gray-400 hover:text-white transition-colors duration-200"
+                  className="text-xs text-gray-400 hover:text-white"
                 >
                   Sign out
                 </button>
@@ -681,9 +661,9 @@ const SupplierAnalysisApp = () => {
         </div>
       </div>
 
-      {/* Main Content avec animations */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header animé */}
+        {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             <button
@@ -695,19 +675,401 @@ const SupplierAnalysisApp = () => {
             
             <div className="flex items-center space-x-4">
               {analysisResults && (
-                <>
-                  <button
-                    onClick={() => setShowAIPanel(!showAIPanel)}
-                    className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-md ${
-                      showAIPanel 
-                        ? 'border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100' 
-                        : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                    }`}
+                <button
+                  onClick={() => navigateTo('dashboard')}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 hover:shadow-md"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Analysis
+                </button>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className={`flex-1 overflow-auto transition-opacity duration-300 ${pageTransition ? 'opacity-0' : 'opacity-100'}`}>
+          {currentView === 'dashboard' && (
+            <div className="max-w-4xl mx-auto py-8 px-6 animate-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center mb-12 animate-in fade-in duration-700">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                  Supplier Performance Analysis
+                </h1>
+                <p className="text-xl text-gray-600">
+                  Upload your Excel file for AI-powered insights and automated recommendations
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-6 rounded-md bg-red-50 p-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="text-sm text-red-700">{error}</div>
+                </div>
+              )}
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8 transform transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-12 text-center transition-all duration-300 ${
+                    isDragging 
+                      ? 'border-blue-500 bg-blue-50 scale-105' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <div className="transform transition-all duration-300 hover:scale-110">
+                    <Upload className={`mx-auto h-12 w-12 mb-4 transition-colors duration-300 ${
+                      isDragging ? 'text-blue-500' : 'text-gray-400'
+                    }`} />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Upload your supplier data
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Drag and drop your file here, or click to browse
+                  </p>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    className="hidden"
+                    id="file-upload"
+                    onChange={handleFileUpload}
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
                   >
-                    <Brain className="h-4 w-4 mr-2" />
-                    AI Insights
-                    <span className="ml-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">NEW</span>
-                  </button>
-                  <button
-                    onClick={() => navigateTo('dashboard')}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 hover:shadow-m
+                    Choose file
+                  </label>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transform transition-all duration-300 hover:shadow-lg hover:scale-[1.01]">
+                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                  <FileSpreadsheet className="h-5 w-5 mr-2" />
+                  Excel Template
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-3">Required columns:</h4>
+                    <ul className="text-sm text-gray-600 space-y-2">
+                      {['Order number', 'Expected date', 'Actual date', 'Quality status', 'Amount', 'Issues encountered'].map((item, index) => (
+                        <li key={index} className="flex items-center animate-in slide-in-from-left duration-300" style={{animationDelay: `${index * 100}ms`}}>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download template
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {isAnalyzing && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-300">
+                  <div className="bg-white rounded-lg p-8 max-w-md mx-4 transform animate-in zoom-in-95 duration-300">
+                    <div className="text-center">
+                      <div className="relative mb-6">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-xs font-medium text-gray-600">{Math.round(uploadProgress)}%</div>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                        <div 
+                          className="bg-black h-2 rounded-full transition-all duration-500 ease-out"
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Analyzing your data...
+                      </h3>
+                      <p className="text-gray-600">
+                        Our AI is processing your supplier performance data
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentView === 'history' && (
+            <div className="max-w-6xl mx-auto py-8 px-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">Analysis History</h1>
+              
+              {analysisHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <History className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-gray-500">No analyses performed yet.</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Supplier
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Orders
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          On-time Rate
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Quality
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Risk Level
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {analysisHistory.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{item.supplier_name}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{item.total_orders}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{item.on_time_rate}%</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{item.quality_rate}%</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              item.risk_level === 'FAIBLE' ? 'bg-green-100 text-green-800' :
+                              item.risk_level === 'MODÉRÉ' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {item.risk_level}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentView === 'results' && analysisResults && (
+            <div className="max-w-6xl mx-auto py-8 px-6 animate-in slide-in-from-bottom-4 duration-500">
+              <div className="mb-8 animate-in fade-in duration-700">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Analysis Results: {analysisResults.supplier_name}
+                </h1>
+                <p className="text-gray-600">
+                  Generated on {new Date(analysisResults.created_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* KPIs Dashboard avec animations */}
+              <div className="grid lg:grid-cols-4 gap-6 mb-8">
+                {[
+                  { key: 'delivery', value: analysisResults.on_time_rate, suffix: '%', label: 'On-time Delivery', icon: Clock, color: 'orange', delay: 0 },
+                  { key: 'quality', value: analysisResults.quality_rate, suffix: '%', label: 'Quality Score', icon: Target, color: 'blue', delay: 100 },
+                  { key: 'orders', value: analysisResults.total_orders, suffix: '', label: 'Total Orders', icon: BarChart3, color: 'green', delay: 200 },
+                  { key: 'costs', value: `€${analysisResults.total_cost_issues}`, suffix: '', label: 'Cost Impact', icon: AlertTriangle, color: 'red', delay: 300 }
+                ].map((kpi, index) => {
+                  const Icon = kpi.icon;
+                  return (
+                    <div 
+                      key={kpi.key}
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer transform transition-all duration-300 hover:shadow-lg hover:scale-105 animate-in slide-in-from-bottom-4"
+                      style={{animationDelay: `${kpi.delay}ms`}}
+                      onClick={() => openKPIModal(kpi.key)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">{kpi.label}</p>
+                          <p className={`text-3xl font-bold mt-2 text-${kpi.color}-600`}>
+                            {kpi.value}{kpi.suffix}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            Click for details
+                          </p>
+                        </div>
+                        <div className="transform transition-transform duration-300 hover:scale-110">
+                          <Icon className={`h-8 w-8 text-${kpi.color}-600`} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+                        €{analysisResults.total_cost_issues}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Generated Messages */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                  <Mail className="h-5 w-5 mr-3" />
+                  AI-Generated Communications
+                </h2>
+                
+                <div className="grid lg:grid-cols-3 gap-6">
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Users className="h-4 w-4 mr-2 text-blue-600" />
+                      For Supplier
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.supplier_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.supplier_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Target className="h-4 w-4 mr-2 text-green-600" />
+                      For Procurement Team
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.buyer_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.buyer_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
+                      Executive Summary
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.management_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.management_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* KPI Detail Modal */}
+      {showKPIModal && selectedKPI && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{selectedKPI.title}</h2>
+                <p className="text-gray-600 mt-1">{selectedKPI.subtitle}</p>
+              </div>
+              <button
+                onClick={closeKPIModal}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Chart Section */}
+              <div className="mb-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Overview</h3>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  {selectedKPI.title === 'Delivery Performance Analysis' && (
+                    <BarChart data={selectedKPI.data} />
+                  )}
+                  {selectedKPI.title === 'Quality Assessment' && (
+                    <PieChart data={selectedKPI.data} />
+                  )}
+                  {selectedKPI.title === 'Order Volume Analysis' && (
+                    <BarChart data={selectedKPI.data} />
+                  )}
+                  {selectedKPI.title === 'Cost Impact Analysis' && (
+                    <CostChart data={selectedKPI.data} />
+                  )}
+                </div>
+              </div>
+
+              {/* Insights Section */}
+              <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2 text-blue-600" />
+                  Key Insights & Recommendations
+                </h3>
+                <div className="space-y-3">
+                  {selectedKPI.insights.map((insight, index) => (
+                    <div key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-sm text-gray-700">{insight}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3">
+                <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Data
+                </button>
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Share Report
+                </button>
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule Follow-up
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SupplierAnalysisApp;
