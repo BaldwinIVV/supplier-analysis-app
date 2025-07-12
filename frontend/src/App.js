@@ -1,9 +1,8 @@
-// ✅ Fixed version of SupplierAnalysisApp to resolve `Unexpected token` issue
 import React, { useState, useEffect } from 'react';
-import {
-  Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target,
-  Users, Mail, BarChart3, Download, LogOut, User, Home, History,
-  X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle,
+import { 
+  Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, 
+  Users, Mail, BarChart3, Download, LogOut, User, Home, History, 
+  X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle, 
   Plus, Menu, Search, ChevronRight, Brain, Zap, Bell, TrendingDown,
   Shield, Eye, MessageSquare, ArrowRight, Star, Lightbulb
 } from 'lucide-react';
@@ -23,6 +22,7 @@ const SupplierAnalysisApp = () => {
   const [pageTransition, setPageTransition] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
 
+  // États pour la connexion/inscription
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -35,24 +35,679 @@ const SupplierAnalysisApp = () => {
     confirmPassword: ''
   });
 
+  // URL de l'API backend
   const API_URL = 'https://supplier-analysis-app.onrender.com';
 
+  // Données pour les modales KPI avec graphiques réels
   const getKPIDetails = (kpiType) => {
     switch (kpiType) {
       case 'delivery':
-        return { title: 'Delivery Performance Analysis', subtitle: 'Monthly punctuality trends and delivery metrics', data: [], insights: [] };
+        return {
+          title: 'Delivery Performance Analysis',
+          subtitle: 'Monthly punctuality trends and delivery metrics',
+          data: [
+            { month: 'Jan', onTime: 82, late: 18, target: 95 },
+            { month: 'Feb', onTime: 85, late: 15, target: 95 },
+            { month: 'Mar', onTime: 87, late: 13, target: 95 },
+            { month: 'Apr', onTime: 90, late: 10, target: 95 },
+            { month: 'May', onTime: 88, late: 12, target: 95 },
+            { month: 'Jun', onTime: 91, late: 9, target: 95 }
+          ],
+          insights: [
+            'Consistent improvement in delivery performance over the past 6 months',
+            'Current performance of 91% is approaching the 95% target',
+            'March showed slight decline, recommend process review for Q2'
+          ]
+        };
       case 'quality':
-        return { title: 'Quality Assessment', subtitle: 'Product quality distribution and defect analysis', data: [], insights: [] };
+        return {
+          title: 'Quality Assessment',
+          subtitle: 'Product quality distribution and defect analysis',
+          data: [
+            { category: 'Compliant', value: 94, color: '#10b981' },
+            { category: 'Minor Issues', value: 4, color: '#f59e0b' },
+            { category: 'Major Defects', value: 2, color: '#ef4444' }
+          ],
+          insights: [
+            'Quality rate of 94% exceeds industry benchmark of 90%',
+            'Defects are primarily minor and non-critical',
+            'Quality control processes are well-established and effective'
+          ]
+        };
       case 'orders':
-        return { title: 'Order Volume Analysis', subtitle: 'Order quantity trends and capacity utilization', data: [], insights: [] };
+        return {
+          title: 'Order Volume Analysis',
+          subtitle: 'Order quantity trends and capacity utilization',
+          data: [
+            { month: 'Jan', orders: 18, capacity: 25 },
+            { month: 'Feb', orders: 22, capacity: 25 },
+            { month: 'Mar', orders: 20, capacity: 25 },
+            { month: 'Apr', orders: 25, capacity: 25 },
+            { month: 'May', orders: 21, capacity: 25 },
+            { month: 'Jun', orders: 19, capacity: 25 }
+          ],
+          insights: [
+            'Average of 21 orders per month with stable demand pattern',
+            'Peak activity occurred in April at full capacity',
+            'Overall demand remains within supplier capacity limits'
+          ]
+        };
       case 'costs':
-        return { title: 'Cost Impact Analysis', subtitle: 'Breakdown of problem-related costs by category', data: [], insights: [] };
+        return {
+          title: 'Cost Impact Analysis',
+          subtitle: 'Breakdown of problem-related costs by category',
+          data: [
+            { category: 'Late Deliveries', amount: 8420, percentage: 55 },
+            { category: 'Quality Issues', amount: 4200, percentage: 27 },
+            { category: 'Non-compliance', amount: 2100, percentage: 14 },
+            { category: 'Other', amount: 700, percentage: 4 }
+          ],
+          insights: [
+            'Late deliveries represent the highest cost impact at €8,420',
+            'Target reduction of 20% achievable through delivery optimization',
+            'Cost trend has been declining since April improvements'
+          ]
+        };
       default:
         return null;
     }
   };
 
-  return null;
-};
+  // Simple chart components
+  const BarChart = ({ data }) => {
+    const maxValue = Math.max(...data.map(d => Math.max(d.onTime || d.orders || 0, d.target || 0)));
+    
+    return (
+      <div className="space-y-3">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center space-x-3">
+            <div className="w-8 text-xs text-gray-600">{item.month}</div>
+            <div className="flex-1 flex space-x-1">
+              <div className="flex-1 bg-gray-100 rounded-sm h-6 relative overflow-hidden">
+                <div 
+                  className="bg-blue-500 h-full rounded-sm transition-all duration-500"
+                  style={{ width: `${((item.onTime || item.orders) / maxValue) * 100}%` }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700">
+                  {item.onTime || item.orders}
+                </div>
+              </div>
+              {item.target && (
+                <div className="w-12 text-xs text-gray-500 flex items-center">
+                  Target: {item.target}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
-export default SupplierAnalysisApp;
+  const PieChart = ({ data }) => {
+    return (
+      <div className="space-y-2">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center justify-between p-2 rounded" style={{backgroundColor: `${item.color}10`}}>
+            <div className="flex items-center space-x-3">
+              <div 
+                className="w-4 h-4 rounded"
+                style={{backgroundColor: item.color}}
+              />
+              <span className="text-sm font-medium">{item.category}</span>
+            </div>
+            <span className="text-sm font-semibold">{item.value}%</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const CostChart = ({ data }) => {
+    const maxAmount = Math.max(...data.map(d => d.amount));
+    
+    return (
+      <div className="space-y-3">
+        {data.map((item, index) => (
+          <div key={index} className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="font-medium">{item.category}</span>
+              <span className="font-semibold">€{item.amount.toLocaleString()}</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-2">
+              <div 
+                className="bg-orange-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${(item.amount / maxAmount) * 100}%` }}
+              />
+            </div>
+            <div className="text-right text-xs text-gray-500">{item.percentage}%</div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Fonctions pour les modales avec animations
+  const openKPIModal = (kpiType) => {
+    setSelectedKPI(getKPIDetails(kpiType));
+    setShowKPIModal(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeKPIModal = () => {
+    setShowKPIModal(false);
+    setSelectedKPI(null);
+    document.body.style.overflow = 'unset';
+  };
+
+  // Navigation avec transitions
+  const navigateTo = (view) => {
+    setPageTransition(true);
+    setTimeout(() => {
+      setCurrentView(view);
+      setPageTransition(false);
+    }, 150);
+  };
+
+  // Fonctions d'authentification
+  const handleLogin = async (email, password) => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user);
+        localStorage.setItem('token', data.token);
+        navigateTo('dashboard');
+        loadAnalysisHistory(data.token);
+        return true;
+      } else {
+        setError(data.message || 'Authentication failed');
+        return false;
+      }
+    } catch (error) {
+      setError('Connection error');
+      return false;
+    }
+  };
+
+  const handleRegister = async (userData) => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user);
+        localStorage.setItem('token', data.token);
+        navigateTo('dashboard');
+        return true;
+      } else {
+        setError(data.message || 'Registration failed');
+        return false;
+      }
+    } catch (error) {
+      setError('Connection error');
+      return false;
+    }
+  };
+
+  const loadAnalysisHistory = async (token) => {
+    try {
+      const response = await fetch(`${API_URL}/api/analyses`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAnalysisHistory(data);
+      }
+    } catch (error) {
+      console.error('Error loading history:', error);
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('token');
+    setCurrentView('login');
+    setAnalysisResults(null);
+    setAnalysisHistory([]);
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    setError(null);
+    setUploadProgress(0);
+
+    // Animation de progression simulée
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/analyze`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await response.json();
+      
+      // Compléter la progression
+      setUploadProgress(100);
+      
+      if (response.ok) {
+        setTimeout(() => {
+          setAnalysisResults(data);
+          navigateTo('results');
+          loadAnalysisHistory(token);
+        }, 500);
+      } else {
+        setError(data.message || 'Analysis failed');
+      }
+    } catch (error) {
+      setError('File processing error');
+    } finally {
+      setTimeout(() => {
+        setIsAnalyzing(false);
+        setUploadProgress(0);
+        clearInterval(progressInterval);
+      }, 1000);
+    }
+  };
+
+  // Gestion du drag & drop
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const mockEvent = { target: { files } };
+      handleFileUpload(mockEvent);
+    }
+  };
+
+  const onSubmitLogin = async (e) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setError(null);
+    await handleLogin(email, password);
+    setIsLoggingIn(false);
+  };
+
+  const onSubmitRegister = async (e) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setError(null);
+    if (registerData.password !== registerData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoggingIn(false);
+      return;
+    }
+    await handleRegister({
+      firstName: registerData.firstName,
+      lastName: registerData.lastName,
+      email: registerData.email,
+      password: registerData.password,
+    });
+    setIsLoggingIn(false);
+  };
+
+  // Vérifier l'authentification au chargement
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(`${API_URL}/api/auth/verify`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('Invalid token');
+      })
+      .then(data => {
+        setUser(data.user);
+        navigateTo('dashboard');
+        loadAnalysisHistory(token);
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+      });
+    }
+  }, []);
+
+  // Interface de connexion style ChatGPT
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white flex">
+        <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
+          <div className="mx-auto w-full max-w-sm lg:w-96">
+            <div className="text-center mb-8">
+              <div className="mx-auto w-12 h-12 bg-black rounded-lg flex items-center justify-center mb-6 transform transition-all duration-300 hover:scale-110">
+                <BarChart3 className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+                Welcome back
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                Sign in to your SupplierFlow account
+              </p>
+            </div>
+
+            {error && (
+              <div className="mb-4 rounded-md bg-red-50 p-4 transition-all duration-300">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
+
+            <div className="space-y-6">
+              {!isRegisterMode ? (
+                <form className="space-y-6" onSubmit={onSubmitLogin}>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      Email address
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                        placeholder="Enter your email"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete="current-password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                        placeholder="Enter your password"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <button
+                      type="submit"
+                      disabled={isLoggingIn}
+                      className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
+                    >
+                      {isLoggingIn ? 'Signing in...' : 'Sign in'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form className="space-y-6" onSubmit={onSubmitRegister}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                        First name
+                      </label>
+                      <input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        required
+                        value={registerData.firstName}
+                        onChange={(e) => setRegisterData({...registerData, firstName: e.target.value})}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                        Last name
+                      </label>
+                      <input
+                        id="lastName"
+                        name="lastName"
+                        type="text"
+                        required
+                        value={registerData.lastName}
+                        onChange={(e) => setRegisterData({...registerData, lastName: e.target.value})}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      Email address
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={registerData.email}
+                      onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      value={registerData.password}
+                      onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                      Confirm password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      required
+                      value={registerData.confirmPassword}
+                      onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
+                  >
+                    {isLoggingIn ? 'Creating account...' : 'Create account'}
+                  </button>
+                </form>
+              )}
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsRegisterMode(!isRegisterMode)}
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                >
+                  {isRegisterMode 
+                    ? 'Already have an account? Sign in' 
+                    : "Don't have an account? Sign up"}
+                </button>
+              </div>
+
+              {!isRegisterMode && (
+                <div className="mt-6 rounded-md bg-gray-50 p-4">
+                  <div className="text-sm text-gray-600">
+                    <p className="font-medium mb-1">Demo account:</p>
+                    <p>Email: demo@test.com</p>
+                    <p>Password: Demo123!</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="hidden lg:block relative flex-1 bg-gray-50">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <BarChart3 className="mx-auto h-32 w-32 text-gray-300 mb-8 transform transition-all duration-300 hover:scale-110" />
+              <h3 className="text-2xl font-semibold text-gray-700 mb-4">
+                Supplier Performance Analytics
+              </h3>
+              <p className="text-gray-500 max-w-md">
+                Transform your supplier data into actionable insights with AI-powered analysis and automated reporting.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Interface principale style ChatGPT avec animations
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar avec animations */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
+        <div className="p-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center transform transition-all duration-300 hover:scale-110">
+              <BarChart3 className="h-5 w-5 text-gray-900" />
+            </div>
+            {sidebarOpen && (
+              <span className="font-semibold text-xl">SupplierFlow</span>
+            )}
+          </div>
+        </div>
+
+        <nav className="flex-1 px-4 space-y-2">
+          <button
+            onClick={() => navigateTo('dashboard')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200 transform hover:scale-105 ${
+              currentView === 'dashboard' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+            }`}
+          >
+            <Home className="h-5 w-5" />
+            {sidebarOpen && <span>Dashboard</span>}
+            {sidebarOpen && currentView === 'dashboard' && <ChevronRight className="h-4 w-4 ml-auto" />}
+          </button>
+          
+          <button
+            onClick={() => navigateTo('history')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200 transform hover:scale-105 ${
+              currentView === 'history' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+            }`}
+          >
+            <History className="h-5 w-5" />
+            {sidebarOpen && <span>Analysis History</span>}
+            {sidebarOpen && currentView === 'history' && <ChevronRight className="h-4 w-4 ml-auto" />}
+          </button>
+
+          {analysisResults && (
+            <button
+              onClick={() => setShowAIPanel(!showAIPanel)}
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200 transform hover:scale-105 ${
+                showAIPanel ? 'bg-purple-800 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <Brain className="h-5 w-5" />
+              {sidebarOpen && <span>AI Insights</span>}
+              {sidebarOpen && <span className="ml-auto bg-purple-600 text-white text-xs px-2 py-1 rounded-full">NEW</span>}
+            </button>
+          )}
+        </nav>
+
+        <div className="p-4 border-t border-gray-700">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center transform transition-all duration-300 hover:scale-110">
+              <User className="h-5 w-5" />
+            </div>
+            {sidebarOpen && (
+              <div className="flex-1">
+                <p className="text-sm font-medium">{user?.firstName || user?.email}</p>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs text-gray-400 hover:text-white transition-colors duration-200"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content avec animations */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header animé */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md hover:bg-gray-100 transition-all duration-200 transform hover:scale-110"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            
+            <div className="flex items-center space-x-4">
+              {analysisResults && (
+                <>
+                  <button
+                    onClick={() => setShowAIPanel(!showAIPanel)}
+                    className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium transition-all duration-200 transform hover:scale-105 hover:shadow-md ${
+                      showAIPanel 
+                        ? 'border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100' 
+                        : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <Brain className="h-4 w-4 mr-2" />
+                    AI Insights
+                    <span className="ml-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">NEW</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo('dashboard')}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 hover:shadow-m
