@@ -136,19 +136,21 @@ const SupplierAnalysisApp = () => {
     }
   };
 
+  // États pour la connexion/inscription
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [registerData, setRegisterData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
   // Interface de connexion
   const renderLoginView = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isLoggingIn, setIsLoggingIn] = useState(false);
-    const [isRegisterMode, setIsRegisterMode] = useState(false);
-    const [registerData, setRegisterData] = useState({
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    });
 
     const onSubmitLogin = async (e) => {
       e.preventDefault();
