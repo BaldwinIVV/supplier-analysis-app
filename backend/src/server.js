@@ -120,6 +120,109 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Route d'analyse de fichiers
+app.post('/api/analyze', async (req, res) => {
+  try {
+    console.log('Analyse de fichier demandée');
+    
+    // Simulation d'analyse IA avec des données réalistes
+    const mockAnalysis = {
+      supplier_name: "Fournisseur Test Excel",
+      total_orders: 125,
+      on_time_rate: 87,
+      quality_rate: 94,
+      total_cost_issues: 15420,
+      risk_level: "MODÉRÉ",
+      created_at: new Date().toISOString(),
+      supplier_message: "Cher partenaire,\n\nSuite à notre analyse de vos performances, nous constatons un taux de livraison à temps de 87%, ce qui est bon mais peut être amélioré. Votre taux de qualité de 94% est excellent.\n\nRecommandations :\n- Améliorer la ponctualité pour atteindre 95%\n- Maintenir le niveau de qualité actuel\n- Réduire les coûts liés aux problèmes\n\nCordialement,\nÉquipe Achats",
+      buyer_message: "Analyse du fournisseur :\n\n✅ Points forts :\n- Excellent taux de qualité (94%)\n- Volume de commandes stable (125)\n- Relation commerciale établie\n\n⚠️ Points d'amélioration :\n- Taux de ponctualité à améliorer (87% vs objectif 95%)\n- Coût des problèmes à surveiller (15,4K€)\n\n📋 Actions recommandées :\n- Suivi mensuel des délais\n- Plan d'action conjoint\n- Revue trimestrielle",
+      management_message: "SYNTHÈSE FOURNISSEUR\n\n📊 Performances globales : SATISFAISANTES\n\n🔢 KPIs :\n- 125 commandes traitées\n- 87% de ponctualité (objectif : 95%)\n- 94% de qualité (excellent)\n- 15,4K€ de coûts problèmes\n\n🎯 Niveau de risque : MODÉRÉ\n\n💼 Recommandation stratégique :\nMaintenir la relation commerciale avec plan d'amélioration sur les délais. Fournisseur fiable avec potentiel d'optimisation."
+    };
+
+    // Simulation d'un délai d'analyse réaliste
+    setTimeout(() => {
+      res.json(mockAnalysis);
+    }, 3000);
+
+  } catch (error) {
+    console.error('Erreur analyse:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'analyse du fichier'
+    });
+  }
+});
+
+// Route pour récupérer l'historique des analyses
+app.get('/api/analyses', async (req, res) => {
+  try {
+    // Mock historique
+    const mockHistory = [
+      {
+        id: 1,
+        supplier_name: "Fournisseur Test Excel",
+        total_orders: 125,
+        on_time_rate: 87,
+        quality_rate: 94,
+        risk_level: "MODÉRÉ",
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 2,
+        supplier_name: "Fournisseur Demo",
+        total_orders: 89,
+        on_time_rate: 95,
+        quality_rate: 98,
+        risk_level: "FAIBLE",
+        created_at: new Date(Date.now() - 24*60*60*1000).toISOString()
+      }
+    ];
+
+    res.json(mockHistory);
+
+  } catch (error) {
+    console.error('Erreur historique:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération de l\'historique'
+    });
+  }
+});
+
+// Route de vérification du token
+app.get('/api/auth/verify', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token manquant'
+      });
+    }
+
+    // Mock verification
+    const mockUser = {
+      id: 1,
+      firstName: 'Demo',
+      lastName: 'User',
+      email: 'demo@test.com'
+    };
+
+    res.json({
+      success: true,
+      user: mockUser
+    });
+
+  } catch (error) {
+    console.error('Erreur vérification:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Token invalide'
+    });
+  }
+});
+
 // Gestion des erreurs 404
 app.use((req, res) => {
   res.status(404).json({
