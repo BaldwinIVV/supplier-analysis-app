@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register
+  // ✅ Register corrigé avec message clair
   const register = async (userData) => {
     try {
       dispatch({ type: 'AUTH_START' });
@@ -159,11 +159,12 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Erreur d\'inscription';
+      const details = error.response?.data?.errors?.map(e => e.msg).join(', ');
       dispatch({
         type: 'AUTH_FAILURE',
-        payload: message
+        payload: details || message
       });
-      return { success: false, error: message };
+      return { success: false, error: details || message };
     }
   };
 
@@ -216,4 +217,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
