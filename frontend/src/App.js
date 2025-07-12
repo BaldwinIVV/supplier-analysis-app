@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History, X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History, X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle, Plus, Menu, Search } from 'lucide-react';
 
 const SupplierAnalysisApp = () => {
   const [currentView, setCurrentView] = useState('login');
@@ -10,6 +10,7 @@ const SupplierAnalysisApp = () => {
   const [analysisHistory, setAnalysisHistory] = useState([]);
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [showKPIModal, setShowKPIModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // États pour la connexion/inscription
   const [email, setEmail] = useState('');
@@ -27,52 +28,153 @@ const SupplierAnalysisApp = () => {
   // URL de l'API backend
   const API_URL = 'https://supplier-analysis-app.onrender.com';
 
-  // Données pour les modales KPI
+  // Données pour les modales KPI avec graphiques réels
   const getKPIDetails = (kpiType) => {
     switch (kpiType) {
       case 'delivery':
         return {
-          title: 'Analyse des Livraisons',
-          subtitle: 'Performances de ponctualité par mois',
+          title: 'Delivery Performance Analysis',
+          subtitle: 'Monthly punctuality trends and delivery metrics',
+          data: [
+            { month: 'Jan', onTime: 82, late: 18, target: 95 },
+            { month: 'Feb', onTime: 85, late: 15, target: 95 },
+            { month: 'Mar', onTime: 87, late: 13, target: 95 },
+            { month: 'Apr', onTime: 90, late: 10, target: 95 },
+            { month: 'May', onTime: 88, late: 12, target: 95 },
+            { month: 'Jun', onTime: 91, late: 9, target: 95 }
+          ],
           insights: [
-            '📈 Amélioration constante depuis janvier',
-            '🎯 Objectif 95% presque atteint en juin',
-            '⚠️ Attention aux pics de retard en mars'
+            'Consistent improvement in delivery performance over the past 6 months',
+            'Current performance of 91% is approaching the 95% target',
+            'March showed slight decline, recommend process review for Q2'
           ]
         };
       case 'quality':
         return {
-          title: 'Analyse Qualité',
-          subtitle: 'Répartition des problèmes qualité',
+          title: 'Quality Assessment',
+          subtitle: 'Product quality distribution and defect analysis',
+          data: [
+            { category: 'Compliant', value: 94, color: '#10b981' },
+            { category: 'Minor Issues', value: 4, color: '#f59e0b' },
+            { category: 'Major Defects', value: 2, color: '#ef4444' }
+          ],
           insights: [
-            '✅ Excellent taux de conformité (94%)',
-            '🔧 Défauts principalement mineurs',
-            '📋 Processus qualité bien maîtrisé'
+            'Quality rate of 94% exceeds industry benchmark of 90%',
+            'Defects are primarily minor and non-critical',
+            'Quality control processes are well-established and effective'
           ]
         };
       case 'orders':
         return {
-          title: 'Volume des Commandes',
-          subtitle: 'Évolution du nombre de commandes',
+          title: 'Order Volume Analysis',
+          subtitle: 'Order quantity trends and capacity utilization',
+          data: [
+            { month: 'Jan', orders: 18, capacity: 25 },
+            { month: 'Feb', orders: 22, capacity: 25 },
+            { month: 'Mar', orders: 20, capacity: 25 },
+            { month: 'Apr', orders: 25, capacity: 25 },
+            { month: 'May', orders: 21, capacity: 25 },
+            { month: 'Jun', orders: 19, capacity: 25 }
+          ],
           insights: [
-            '📊 Moyenne de 21 commandes/mois',
-            '📈 Pic d\'activité en avril',
-            '🔄 Tendance stable globalement'
+            'Average of 21 orders per month with stable demand pattern',
+            'Peak activity occurred in April at full capacity',
+            'Overall demand remains within supplier capacity limits'
           ]
         };
       case 'costs':
         return {
-          title: 'Analyse des Coûts',
-          subtitle: 'Répartition des coûts par type de problème',
+          title: 'Cost Impact Analysis',
+          subtitle: 'Breakdown of problem-related costs by category',
+          data: [
+            { category: 'Late Deliveries', amount: 8420, percentage: 55 },
+            { category: 'Quality Issues', amount: 4200, percentage: 27 },
+            { category: 'Non-compliance', amount: 2100, percentage: 14 },
+            { category: 'Other', amount: 700, percentage: 4 }
+          ],
           insights: [
-            '💰 Principal coût : retards de livraison',
-            '🎯 Objectif : réduire de 20% d\'ici 3 mois',
-            '📉 Tendance à la baisse depuis avril'
+            'Late deliveries represent the highest cost impact at €8,420',
+            'Target reduction of 20% achievable through delivery optimization',
+            'Cost trend has been declining since April improvements'
           ]
         };
       default:
         return null;
     }
+  };
+
+  // Simple chart components
+  const BarChart = ({ data }) => {
+    const maxValue = Math.max(...data.map(d => Math.max(d.onTime || d.orders || 0, d.target || 0)));
+    
+    return (
+      <div className="space-y-3">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center space-x-3">
+            <div className="w-8 text-xs text-gray-600">{item.month}</div>
+            <div className="flex-1 flex space-x-1">
+              <div className="flex-1 bg-gray-100 rounded-sm h-6 relative overflow-hidden">
+                <div 
+                  className="bg-blue-500 h-full rounded-sm transition-all duration-500"
+                  style={{ width: `${((item.onTime || item.orders) / maxValue) * 100}%` }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700">
+                  {item.onTime || item.orders}
+                </div>
+              </div>
+              {item.target && (
+                <div className="w-12 text-xs text-gray-500 flex items-center">
+                  Target: {item.target}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const PieChart = ({ data }) => {
+    return (
+      <div className="space-y-2">
+        {data.map((item, index) => (
+          <div key={index} className="flex items-center justify-between p-2 rounded" style={{backgroundColor: `${item.color}10`}}>
+            <div className="flex items-center space-x-3">
+              <div 
+                className="w-4 h-4 rounded"
+                style={{backgroundColor: item.color}}
+              />
+              <span className="text-sm font-medium">{item.category}</span>
+            </div>
+            <span className="text-sm font-semibold">{item.value}%</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const CostChart = ({ data }) => {
+    const maxAmount = Math.max(...data.map(d => d.amount));
+    
+    return (
+      <div className="space-y-3">
+        {data.map((item, index) => (
+          <div key={index} className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="font-medium">{item.category}</span>
+              <span className="font-semibold">€{item.amount.toLocaleString()}</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-2">
+              <div 
+                className="bg-orange-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${(item.amount / maxAmount) * 100}%` }}
+              />
+            </div>
+            <div className="text-right text-xs text-gray-500">{item.percentage}%</div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   // Fonctions pour les modales
@@ -102,11 +204,11 @@ const SupplierAnalysisApp = () => {
         loadAnalysisHistory(data.token);
         return true;
       } else {
-        setError(data.message || 'Erreur de connexion');
+        setError(data.message || 'Authentication failed');
         return false;
       }
     } catch (error) {
-      setError('Erreur de connexion au serveur');
+      setError('Connection error');
       return false;
     }
   };
@@ -125,11 +227,11 @@ const SupplierAnalysisApp = () => {
         setCurrentView('dashboard');
         return true;
       } else {
-        setError(data.message || 'Erreur d\'inscription');
+        setError(data.message || 'Registration failed');
         return false;
       }
     } catch (error) {
-      setError('Erreur de connexion au serveur');
+      setError('Connection error');
       return false;
     }
   };
@@ -144,7 +246,7 @@ const SupplierAnalysisApp = () => {
         setAnalysisHistory(data);
       }
     } catch (error) {
-      console.error('Erreur chargement historique:', error);
+      console.error('Error loading history:', error);
     }
   };
 
@@ -178,10 +280,10 @@ const SupplierAnalysisApp = () => {
         setCurrentView('results');
         loadAnalysisHistory(token);
       } else {
-        setError(data.message || 'Erreur lors de l\'analyse');
+        setError(data.message || 'Analysis failed');
       }
     } catch (error) {
-      setError('Erreur lors du traitement du fichier');
+      setError('File processing error');
     } finally {
       setIsAnalyzing(false);
     }
@@ -200,7 +302,7 @@ const SupplierAnalysisApp = () => {
     setIsLoggingIn(true);
     setError(null);
     if (registerData.password !== registerData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError('Passwords do not match');
       setIsLoggingIn(false);
       return;
     }
@@ -224,7 +326,7 @@ const SupplierAnalysisApp = () => {
         if (response.ok) {
           return response.json();
         }
-        throw new Error('Token invalide');
+        throw new Error('Invalid token');
       })
       .then(data => {
         setUser(data.user);
@@ -237,516 +339,630 @@ const SupplierAnalysisApp = () => {
     }
   }, []);
 
-  // Interface de connexion
+  // Interface de connexion style ChatGPT
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-          <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-              <BarChart3 className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">SupplierFlow</h1>
-            <p className="text-gray-600">Analyse intelligente des performances fournisseurs</p>
-          </div>
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          {!isRegisterMode ? (
-            <div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  placeholder="votre@email.com"
-                  required
-                />
+      <div className="min-h-screen bg-white flex">
+        <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
+          <div className="mx-auto w-full max-w-sm lg:w-96">
+            <div className="text-center mb-8">
+              <div className="mx-auto w-12 h-12 bg-black rounded-lg flex items-center justify-center mb-6">
+                <BarChart3 className="h-6 w-6 text-white" />
               </div>
-              <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Mot de passe</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <button
-                onClick={onSubmitLogin}
-                disabled={isLoggingIn}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 mb-4"
-              >
-                {isLoggingIn ? 'Connexion...' : 'Se connecter'}
-              </button>
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+                Welcome back
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                Sign in to your SupplierFlow account
+              </p>
             </div>
-          ) : (
-            <div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-gray-700 text-sm font-bold mb-2">Prénom</label>
-                  <input
-                    type="text"
-                    value={registerData.firstName}
-                    onChange={(e) => setRegisterData({...registerData, firstName: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                    required
-                  />
+
+            {error && (
+              <div className="mb-4 rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
+
+            <div className="space-y-6">
+              {!isRegisterMode ? (
+                <form className="space-y-6" onSubmit={onSubmitLogin}>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      Email address
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                        placeholder="Enter your email"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete="current-password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                        placeholder="Enter your password"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <button
+                      type="submit"
+                      disabled={isLoggingIn}
+                      className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                    >
+                      {isLoggingIn ? 'Signing in...' : 'Sign in'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form className="space-y-6" onSubmit={onSubmitRegister}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                        First name
+                      </label>
+                      <input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        required
+                        value={registerData.firstName}
+                        onChange={(e) => setRegisterData({...registerData, firstName: e.target.value})}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                        Last name
+                      </label>
+                      <input
+                        id="lastName"
+                        name="lastName"
+                        type="text"
+                        required
+                        value={registerData.lastName}
+                        onChange={(e) => setRegisterData({...registerData, lastName: e.target.value})}
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                      Email address
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={registerData.email}
+                      onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      value={registerData.password}
+                      onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                      Confirm password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      required
+                      value={registerData.confirmPassword}
+                      onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                  >
+                    {isLoggingIn ? 'Creating account...' : 'Create account'}
+                  </button>
+                </form>
+              )}
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsRegisterMode(!isRegisterMode)}
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  {isRegisterMode 
+                    ? 'Already have an account? Sign in' 
+                    : "Don't have an account? Sign up"}
+                </button>
+              </div>
+
+              {!isRegisterMode && (
+                <div className="mt-6 rounded-md bg-gray-50 p-4">
+                  <div className="text-sm text-gray-600">
+                    <p className="font-medium mb-1">Demo account:</p>
+                    <p>Email: demo@test.com</p>
+                    <p>Password: Demo123!</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-gray-700 text-sm font-bold mb-2">Nom</label>
-                  <input
-                    type="text"
-                    value={registerData.lastName}
-                    onChange={(e) => setRegisterData({...registerData, lastName: e.target.value})}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                <input
-                  type="email"
-                  value={registerData.email}
-                  onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Mot de passe</label>
-                <input
-                  type="password"
-                  value={registerData.password}
-                  onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Confirmer le mot de passe</label>
-                <input
-                  type="password"
-                  value={registerData.confirmPassword}
-                  onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <button
-                onClick={onSubmitRegister}
-                disabled={isLoggingIn}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 mb-4"
-              >
-                {isLoggingIn ? 'Création...' : 'Créer un compte'}
-              </button>
+              )}
             </div>
-          )}
-
-          <div className="text-center">
-            <button
-              onClick={() => setIsRegisterMode(!isRegisterMode)}
-              className="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              {isRegisterMode ? 'Déjà un compte ? Se connecter' : 'Pas de compte ? S\'inscrire'}
-            </button>
           </div>
-
-          {!isRegisterMode && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">Compte de démonstration :</p>
-              <p className="text-xs text-gray-500">Email : demo@test.com</p>
-              <p className="text-xs text-gray-500">Mot de passe : Demo123!</p>
+        </div>
+        
+        <div className="hidden lg:block relative flex-1 bg-gray-50">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <BarChart3 className="mx-auto h-32 w-32 text-gray-300 mb-8" />
+              <h3 className="text-2xl font-semibold text-gray-700 mb-4">
+                Supplier Performance Analytics
+              </h3>
+              <p className="text-gray-500 max-w-md">
+                Transform your supplier data into actionable insights with AI-powered analysis and automated reporting.
+              </p>
             </div>
-          )}
+          </div>
         </div>
       </div>
     );
   }
 
-  // Navigation principale
-  const renderNavigation = () => (
-    <div className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-              <BarChart3 className="h-5 w-5 text-white" />
+  // Interface principale style ChatGPT
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900 text-white transition-all duration-200 flex flex-col`}>
+        <div className="p-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+              <BarChart3 className="h-5 w-5 text-gray-900" />
             </div>
-            <h1 className="text-xl font-bold text-gray-800">SupplierFlow</h1>
+            {sidebarOpen && (
+              <span className="font-semibold text-xl">SupplierFlow</span>
+            )}
           </div>
+        </div>
+
+        <nav className="flex-1 px-4 space-y-2">
+          <button
+            onClick={() => setCurrentView('dashboard')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              currentView === 'dashboard' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+            }`}
+          >
+            <Home className="h-5 w-5" />
+            {sidebarOpen && <span>Dashboard</span>}
+          </button>
           
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setCurrentView('dashboard')}
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                currentView === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Home className="h-4 w-4 inline mr-1" />
-              Accueil
-            </button>
-            
-            <button
-              onClick={() => setCurrentView('history')}
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                currentView === 'history' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <History className="h-4 w-4 inline mr-1" />
-              Historique
-            </button>
-            
-            <div className="flex items-center space-x-2">
-              <User className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">{user?.firstName || user?.email}</span>
+          <button
+            onClick={() => setCurrentView('history')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              currentView === 'history' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+            }`}
+          >
+            <History className="h-5 w-5" />
+            {sidebarOpen && <span>Analysis History</span>}
+          </button>
+        </nav>
+
+        <div className="p-4 border-t border-gray-700">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+              <User className="h-5 w-5" />
             </div>
-            
-            <button
-              onClick={handleLogout}
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-700"
-            >
-              <LogOut className="h-4 w-4 inline mr-1" />
-              Déconnexion
-            </button>
+            {sidebarOpen && (
+              <div className="flex-1">
+                <p className="text-sm font-medium">{user?.firstName || user?.email}</p>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs text-gray-400 hover:text-white"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
-  );
 
-  // Interface principale
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {renderNavigation()}
-      <div className="py-6">
-        {currentView === 'dashboard' && (
-          <div className="max-w-4xl mx-auto p-6">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
-                Analyse des Performances Fournisseurs
-              </h2>
-              <p className="text-gray-600 text-lg">
-                Uploadez votre fichier Excel pour une analyse automatique et des recommandations personnalisées
-              </p>
-            </div>
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                <strong>Erreur:</strong> {error}
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors">
-                <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  Glissez votre fichier Excel ici
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  Formats supportés : Excel (.xlsx, .xls) et CSV (.csv)
-                </p>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  className="hidden"
-                  id="file-upload"
-                  onChange={handleFileUpload}
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
-                >
-                  Choisir un fichier
-                </label>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <FileSpreadsheet className="h-5 w-5 mr-2 text-green-600" />
-                Template Excel recommandé
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-2">Colonnes requises :</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Numéro commande</li>
-                    <li>• Date prévue</li>
-                    <li>• Date réelle</li>
-                    <li>• Statut qualité</li>
-                    <li>• Montant</li>
-                    <li>• Problèmes rencontrés</li>
-                  </ul>
-                </div>
-                <div>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
-                    <Download className="h-4 w-4 mr-2" />
-                    Télécharger le template
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {isAnalyzing && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-8 max-w-md mx-4">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      Analyse en cours...
-                    </h3>
-                    <p className="text-gray-600">
-                      Notre IA analyse vos données de performance fournisseur
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {currentView === 'history' && (
-          <div className="max-w-6xl mx-auto p-6">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Historique des Analyses</h2>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md hover:bg-gray-100"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
             
-            {analysisHistory.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Aucune analyse effectuée pour le moment.</p>
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fournisseur
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Commandes
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ponctualité
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Qualité
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Risque
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {analysisHistory.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{item.supplier_name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
-                            {new Date(item.created_at).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{item.total_orders}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{item.on_time_rate}%</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{item.quality_rate}%</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            item.risk_level === 'FAIBLE' ? 'bg-green-100 text-green-800' :
-                            item.risk_level === 'MODÉRÉ' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {item.risk_level}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <div className="flex items-center space-x-4">
+              {analysisResults && (
+                <button
+                  onClick={() => setCurrentView('dashboard')}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Analysis
+                </button>
+              )}
+            </div>
           </div>
-        )}
+        </header>
 
-        {currentView === 'results' && analysisResults && (
-          <div className="max-w-6xl mx-auto p-6">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800">
-                  Analyse - {analysisResults.supplier_name}
-                </h2>
-                <p className="text-gray-600">
-                  {new Date(analysisResults.created_at).toLocaleDateString()}
+        {/* Content Area */}
+        <main className="flex-1 overflow-auto">
+          {currentView === 'dashboard' && (
+            <div className="max-w-4xl mx-auto py-8 px-6">
+              <div className="text-center mb-12">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                  Supplier Performance Analysis
+                </h1>
+                <p className="text-xl text-gray-600">
+                  Upload your Excel file for AI-powered insights and automated recommendations
                 </p>
               </div>
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-              >
-                Nouvelle analyse
-              </button>
-            </div>
 
-            {/* KPIs Dashboard cliquables */}
-            <div className="grid md:grid-cols-4 gap-6 mb-8">
-              <div 
-                className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
-                onClick={() => openKPIModal('delivery')}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Livraisons à temps</p>
-                    <p className="text-2xl font-bold text-orange-600">
-                      {analysisResults.on_time_rate}%
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">📈 Cliquez pour détails</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-orange-600" />
+              {error && (
+                <div className="mb-6 rounded-md bg-red-50 p-4">
+                  <div className="text-sm text-red-700">{error}</div>
                 </div>
-              </div>
-              
-              <div 
-                className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
-                onClick={() => openKPIModal('quality')}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Score qualité</p>
-                    <p className="text-2xl font-bold text-blue-600">
-                      {analysisResults.quality_rate}%
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">📊 Cliquez pour détails</p>
-                  </div>
-                  <Target className="h-8 w-8 text-blue-600" />
-                </div>
-              </div>
-              
-              <div 
-                className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
-                onClick={() => openKPIModal('orders')}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Commandes totales</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {analysisResults.total_orders}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">📦 Cliquez pour détails</p>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-green-600" />
-                </div>
-              </div>
-              
-              <div 
-                className="bg-white rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105"
-                onClick={() => openKPIModal('costs')}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">Coût des problèmes</p>
-                    <p className="text-2xl font-bold text-red-600">
-                      {analysisResults.total_cost_issues}€
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">💰 Cliquez pour détails</p>
-                  </div>
-                  <AlertTriangle className="h-8 w-8 text-red-600" />
-                </div>
-              </div>
-            </div>
+              )}
 
-            {/* Messages générés automatiquement */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
-                <Mail className="h-5 w-5 mr-2 text-blue-600" />
-                Messages générés automatiquement
-              </h3>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-800 mb-3 flex items-center">
-                    <Users className="h-4 w-4 mr-2 text-blue-600" />
-                    Pour le fournisseur
-                  </h4>
-                  <textarea
-                    className="w-full h-40 text-sm border rounded p-2 resize-none"
-                    value={analysisResults.supplier_message}
-                    readOnly
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Upload your supplier data
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Supported formats: Excel (.xlsx, .xls) and CSV (.csv)
+                  </p>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    className="hidden"
+                    id="file-upload"
+                    onChange={handleFileUpload}
                   />
-                  <button 
-                    onClick={() => navigator.clipboard.writeText(analysisResults.supplier_message)}
-                    className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                  <label
+                    htmlFor="file-upload"
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 cursor-pointer"
                   >
-                    Copier
-                  </button>
+                    Choose file
+                  </label>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                  <FileSpreadsheet className="h-5 w-5 mr-2" />
+                  Excel Template
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-3">Required columns:</h4>
+                    <ul className="text-sm text-gray-600 space-y-2">
+                      <li className="flex items-center">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                        Order number
+                      </li>
+                      <li className="flex items-center">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                        Expected date
+                      </li>
+                      <li className="flex items-center">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                        Actual date
+                      </li>
+                      <li className="flex items-center">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                        Quality status
+                      </li>
+                      <li className="flex items-center">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                        Amount
+                      </li>
+                      <li className="flex items-center">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                        Issues encountered
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download template
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {isAnalyzing && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-8 max-w-md mx-4">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Analyzing your data...
+                      </h3>
+                      <p className="text-gray-600">
+                        Our AI is processing your supplier performance data
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentView === 'history' && (
+            <div className="max-w-6xl mx-auto py-8 px-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">Analysis History</h1>
+              
+              {analysisHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <History className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-gray-500">No analyses performed yet.</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Supplier
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Orders
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          On-time Rate
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Quality
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Risk Level
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {analysisHistory.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{item.supplier_name}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{item.total_orders}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{item.on_time_rate}%</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{item.quality_rate}%</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              item.risk_level === 'FAIBLE' ? 'bg-green-100 text-green-800' :
+                              item.risk_level === 'MODÉRÉ' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {item.risk_level}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentView === 'results' && analysisResults && (
+            <div className="max-w-6xl mx-auto py-8 px-6">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Analysis Results: {analysisResults.supplier_name}
+                </h1>
+                <p className="text-gray-600">
+                  Generated on {new Date(analysisResults.created_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* KPIs Dashboard avec graphiques */}
+              <div className="grid lg:grid-cols-4 gap-6 mb-8">
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
+                  onClick={() => openKPIModal('delivery')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">On-time Delivery</p>
+                      <p className="text-3xl font-bold text-orange-600 mt-2">
+                        {analysisResults.on_time_rate}%
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <Clock className="h-8 w-8 text-orange-600" />
+                  </div>
                 </div>
                 
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-800 mb-3 flex items-center">
-                    <Target className="h-4 w-4 mr-2 text-green-600" />
-                    Pour l'acheteur
-                  </h4>
-                  <textarea
-                    className="w-full h-40 text-sm border rounded p-2 resize-none"
-                    value={analysisResults.buyer_message}
-                    readOnly
-                  />
-                  <button 
-                    onClick={() => navigator.clipboard.writeText(analysisResults.buyer_message)}
-                    className="mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                  >
-                    Copier
-                  </button>
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
+                  onClick={() => openKPIModal('quality')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Quality Score</p>
+                      <p className="text-3xl font-bold text-blue-600 mt-2">
+                        {analysisResults.quality_rate}%
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <Target className="h-8 w-8 text-blue-600" />
+                  </div>
                 </div>
                 
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-800 mb-3 flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
-                    Pour la direction
-                  </h4>
-                  <textarea
-                    className="w-full h-40 text-sm border rounded p-2 resize-none"
-                    value={analysisResults.management_message}
-                    readOnly
-                  />
-                  <button 
-                    onClick={() => navigator.clipboard.writeText(analysisResults.management_message)}
-                    className="mt-2 bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
-                  >
-                    Copier
-                  </button>
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
+                  onClick={() => openKPIModal('orders')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                      <p className="text-3xl font-bold text-green-600 mt-2">
+                        {analysisResults.total_orders}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <BarChart3 className="h-8 w-8 text-green-600" />
+                  </div>
+                </div>
+                
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
+                  onClick={() => openKPIModal('costs')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Cost Impact</p>
+                      <p className="text-3xl font-bold text-red-600 mt-2">
+                        €{analysisResults.total_cost_issues}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Generated Messages */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                  <Mail className="h-5 w-5 mr-3" />
+                  AI-Generated Communications
+                </h2>
+                
+                <div className="grid lg:grid-cols-3 gap-6">
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Users className="h-4 w-4 mr-2 text-blue-600" />
+                      For Supplier
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.supplier_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.supplier_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Target className="h-4 w-4 mr-2 text-green-600" />
+                      For Procurement Team
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.buyer_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.buyer_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
+                      Executive Summary
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.management_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.management_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </main>
       </div>
 
-      {/* Modale KPI détaillée */}
+      {/* KPI Detail Modal */}
       {showKPIModal && selectedKPI && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">{selectedKPI.title}</h2>
-                <p className="text-gray-600">{selectedKPI.subtitle}</p>
+                <h2 className="text-2xl font-bold text-gray-900">{selectedKPI.title}</h2>
+                <p className="text-gray-600 mt-1">{selectedKPI.subtitle}</p>
               </div>
               <button
                 onClick={closeKPIModal}
@@ -757,100 +973,54 @@ const SupplierAnalysisApp = () => {
             </div>
 
             <div className="p-6">
-              {/* Graphique selon le type de KPI */}
-              {selectedKPI.title === 'Analyse des Livraisons' && (
-                <div className="mb-6">
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <BarChart3 className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                      <p className="text-gray-600">Graphique des livraisons par mois</p>
-                      <p className="text-sm text-gray-500">87% de ponctualité moyenne</p>
-                    </div>
-                  </div>
+              {/* Chart Section */}
+              <div className="mb-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Overview</h3>
+                <div className="bg-gray-50 rounded-lg p-6">
+                  {selectedKPI.title === 'Delivery Performance Analysis' && (
+                    <BarChart data={selectedKPI.data} />
+                  )}
+                  {selectedKPI.title === 'Quality Assessment' && (
+                    <PieChart data={selectedKPI.data} />
+                  )}
+                  {selectedKPI.title === 'Order Volume Analysis' && (
+                    <BarChart data={selectedKPI.data} />
+                  )}
+                  {selectedKPI.title === 'Cost Impact Analysis' && (
+                    <CostChart data={selectedKPI.data} />
+                  )}
                 </div>
-              )}
+              </div>
 
-              {selectedKPI.title === 'Analyse Qualité' && (
-                <div className="mb-6">
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Target className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                      <p className="text-gray-600">Répartition qualité</p>
-                      <div className="flex justify-center gap-4 mt-2 text-sm">
-                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded">✅ 94% Conforme</span>
-                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded">❌ 6% Non-conforme</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedKPI.title === 'Volume des Commandes' && (
-                <div className="mb-6">
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Package className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                      <p className="text-gray-600">Évolution des commandes</p>
-                      <p className="text-sm text-gray-500">125 commandes au total</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectedKPI.title === 'Analyse des Coûts' && (
-                <div className="mb-6">
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Euro className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                      <p className="text-gray-600">Répartition des coûts</p>
-                      <div className="mt-3 space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>Retards livraison:</span>
-                          <span className="font-semibold">8,420€</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Défauts qualité:</span>
-                          <span className="font-semibold">4,200€</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Non-conformités:</span>
-                          <span className="font-semibold">2,100€</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Insights */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+              {/* Insights Section */}
+              <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
                   <AlertCircle className="h-5 w-5 mr-2 text-blue-600" />
-                  Insights et Recommandations
+                  Key Insights & Recommendations
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {selectedKPI.insights.map((insight, index) => (
-                    <p key={index} className="text-sm text-gray-700 flex items-start">
-                      <span className="mr-2">•</span>
-                      {insight}
-                    </p>
+                    <div key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-sm text-gray-700">{insight}</p>
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 mt-6">
-                <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3">
+                <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                   <Download className="h-4 w-4 mr-2" />
-                  Exporter les données
+                  Export Data
                 </button>
-                <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                   <Mail className="h-4 w-4 mr-2" />
-                  Partager le rapport
+                  Share Report
                 </button>
-                <button className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                   <Calendar className="h-4 w-4 mr-2" />
-                  Programmer un suivi
+                  Schedule Follow-up
                 </button>
               </div>
             </div>
