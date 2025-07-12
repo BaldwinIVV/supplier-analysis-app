@@ -14,12 +14,7 @@ const initialState = {
 const authReducer = (state, action) => {
   switch (action.type) {
     case 'AUTH_START':
-      return {
-        ...state,
-        loading: true,
-        error: null
-      };
-    
+      return { ...state, loading: true, error: null };
     case 'AUTH_SUCCESS':
       return {
         ...state,
@@ -29,7 +24,6 @@ const authReducer = (state, action) => {
         loading: false,
         error: null
       };
-    
     case 'AUTH_FAILURE':
       return {
         ...state,
@@ -39,7 +33,6 @@ const authReducer = (state, action) => {
         loading: false,
         error: action.payload
       };
-    
     case 'LOGOUT':
       return {
         ...state,
@@ -49,19 +42,10 @@ const authReducer = (state, action) => {
         loading: false,
         error: null
       };
-    
     case 'UPDATE_USER':
-      return {
-        ...state,
-        user: action.payload
-      };
-    
+      return { ...state, user: action.payload };
     case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null
-      };
-    
+      return { ...state, error: null };
     default:
       return state;
   }
@@ -70,7 +54,7 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Configurer axios avec le token
+  // Ajout du token dans les headers axios si présent
   useEffect(() => {
     if (state.token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
@@ -79,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [state.token]);
 
-  // Vérifier le token au chargement
+  // Vérification du token au premier chargement
   useEffect(() => {
     const checkAuth = async () => {
       if (state.token) {
@@ -95,6 +79,7 @@ export const AuthProvider = ({ children }) => {
           });
         } catch (error) {
           localStorage.removeItem('token');
+          delete axios.defaults.headers.common['Authorization'];
           dispatch({
             type: 'AUTH_FAILURE',
             payload: 'Session expirée. Veuillez vous reconnecter.'
@@ -108,21 +93,17 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Login
+  // Connexion
   const login = async (email, password) => {
     try {
       dispatch({ type: 'AUTH_START' });
-      
-      const response = await axios.post('/api/auth/login', {
-        email,
-        password
-      });
 
+      const response = await axios.post('/api/auth/login', { email, password });
       const { user, token } = response.data.data;
-      
+
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       dispatch({
         type: 'AUTH_SUCCESS',
         payload: { user, token }
@@ -139,18 +120,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Register corrigé avec message clair
+  // Inscription
   const register = async (userData) => {
     try {
       dispatch({ type: 'AUTH_START' });
-      
+
       const response = await axios.post('/api/auth/register', userData);
-      
       const { user, token } = response.data.data;
-      
+
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       dispatch({
         type: 'AUTH_SUCCESS',
         payload: { user, token }
@@ -158,7 +138,8 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Erreur d\'inscription';
+      const fallback = 'Erreur d\'inscription';
+      const message = error.response?.data?.message || fallback;
       const details = error.response?.data?.errors?.map(e => e.msg).join(', ');
       dispatch({
         type: 'AUTH_FAILURE',
@@ -168,14 +149,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout
+  // Déconnexion
   const logout = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
     dispatch({ type: 'LOGOUT' });
   };
 
-  // Update profile
+  // Mise à jour du profil
   const updateProfile = async (profileData) => {
     try {
       const response = await axios.put('/api/auth/profile', profileData);
@@ -190,7 +171,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Clear error
+  // Réinitialiser l’erreur
   const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
@@ -204,11 +185,7 @@ export const AuthProvider = ({ children }) => {
     clearError
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
