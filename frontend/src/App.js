@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History, X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle, Plus, Menu, Search } from 'lucide-react';
+import { 
+  Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, 
+  Users, Mail, BarChart3, Download, LogOut, User, Home, History, 
+  X, Calendar, Package, Euro, CheckCircle, XCircle, AlertCircle, 
+  Plus, Menu, Search, ChevronRight 
+} from 'lucide-react';
 
 const SupplierAnalysisApp = () => {
   const [currentView, setCurrentView] = useState('login');
@@ -11,6 +16,9 @@ const SupplierAnalysisApp = () => {
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [showKPIModal, setShowKPIModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [pageTransition, setPageTransition] = useState(false);
 
   // États pour la connexion/inscription
   const [email, setEmail] = useState('');
@@ -177,15 +185,26 @@ const SupplierAnalysisApp = () => {
     );
   };
 
-  // Fonctions pour les modales
+  // Fonctions pour les modales avec animations
   const openKPIModal = (kpiType) => {
     setSelectedKPI(getKPIDetails(kpiType));
     setShowKPIModal(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const closeKPIModal = () => {
     setShowKPIModal(false);
     setSelectedKPI(null);
+    document.body.style.overflow = 'unset';
+  };
+
+  // Navigation avec transitions
+  const navigateTo = (view) => {
+    setPageTransition(true);
+    setTimeout(() => {
+      setCurrentView(view);
+      setPageTransition(false);
+    }, 150);
   };
 
   // Fonctions d'authentification
@@ -200,7 +219,7 @@ const SupplierAnalysisApp = () => {
       if (response.ok) {
         setUser(data.user);
         localStorage.setItem('token', data.token);
-        setCurrentView('dashboard');
+        navigateTo('dashboard');
         loadAnalysisHistory(data.token);
         return true;
       } else {
@@ -224,7 +243,7 @@ const SupplierAnalysisApp = () => {
       if (response.ok) {
         setUser(data.user);
         localStorage.setItem('token', data.token);
-        setCurrentView('dashboard');
+        navigateTo('dashboard');
         return true;
       } else {
         setError(data.message || 'Registration failed');
@@ -264,6 +283,18 @@ const SupplierAnalysisApp = () => {
 
     setIsAnalyzing(true);
     setError(null);
+    setUploadProgress(0);
+
+    // Animation de progression simulée
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
 
     try {
       const formData = new FormData();
@@ -275,17 +306,48 @@ const SupplierAnalysisApp = () => {
         body: formData,
       });
       const data = await response.json();
+      
+      // Compléter la progression
+      setUploadProgress(100);
+      
       if (response.ok) {
-        setAnalysisResults(data);
-        setCurrentView('results');
-        loadAnalysisHistory(token);
+        setTimeout(() => {
+          setAnalysisResults(data);
+          navigateTo('results');
+          loadAnalysisHistory(token);
+        }, 500);
       } else {
         setError(data.message || 'Analysis failed');
       }
     } catch (error) {
       setError('File processing error');
     } finally {
-      setIsAnalyzing(false);
+      setTimeout(() => {
+        setIsAnalyzing(false);
+        setUploadProgress(0);
+        clearInterval(progressInterval);
+      }, 1000);
+    }
+  };
+
+  // Gestion du drag & drop
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const mockEvent = { target: { files } };
+      handleFileUpload(mockEvent);
     }
   };
 
@@ -330,7 +392,7 @@ const SupplierAnalysisApp = () => {
       })
       .then(data => {
         setUser(data.user);
-        setCurrentView('dashboard');
+        navigateTo('dashboard');
         loadAnalysisHistory(token);
       })
       .catch(() => {
@@ -346,7 +408,7 @@ const SupplierAnalysisApp = () => {
         <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
           <div className="mx-auto w-full max-w-sm lg:w-96">
             <div className="text-center mb-8">
-              <div className="mx-auto w-12 h-12 bg-black rounded-lg flex items-center justify-center mb-6">
+              <div className="mx-auto w-12 h-12 bg-black rounded-lg flex items-center justify-center mb-6 transform transition-all duration-300 hover:scale-110">
                 <BarChart3 className="h-6 w-6 text-white" />
               </div>
               <h2 className="text-3xl font-bold tracking-tight text-gray-900">
@@ -358,7 +420,7 @@ const SupplierAnalysisApp = () => {
             </div>
 
             {error && (
-              <div className="mb-4 rounded-md bg-red-50 p-4">
+              <div className="mb-4 rounded-md bg-red-50 p-4 transition-all duration-300">
                 <div className="text-sm text-red-700">{error}</div>
               </div>
             )}
@@ -379,7 +441,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
                         placeholder="Enter your email"
                       />
                     </div>
@@ -398,7 +460,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
                         placeholder="Enter your password"
                       />
                     </div>
@@ -408,7 +470,7 @@ const SupplierAnalysisApp = () => {
                     <button
                       type="submit"
                       disabled={isLoggingIn}
-                      className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                      className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
                     >
                       {isLoggingIn ? 'Signing in...' : 'Sign in'}
                     </button>
@@ -428,7 +490,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={registerData.firstName}
                         onChange={(e) => setRegisterData({...registerData, firstName: e.target.value})}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
                       />
                     </div>
                     <div>
@@ -442,7 +504,7 @@ const SupplierAnalysisApp = () => {
                         required
                         value={registerData.lastName}
                         onChange={(e) => setRegisterData({...registerData, lastName: e.target.value})}
-                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
                       />
                     </div>
                   </div>
@@ -458,7 +520,7 @@ const SupplierAnalysisApp = () => {
                       required
                       value={registerData.email}
                       onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
                     />
                   </div>
 
@@ -473,7 +535,7 @@ const SupplierAnalysisApp = () => {
                       required
                       value={registerData.password}
                       onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
                     />
                   </div>
 
@@ -488,14 +550,14 @@ const SupplierAnalysisApp = () => {
                       required
                       value={registerData.confirmPassword}
                       onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
-                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black"
+                      className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black transition-all duration-200"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={isLoggingIn}
-                    className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50"
+                    className="flex w-full justify-center rounded-md border border-transparent bg-black py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
                   >
                     {isLoggingIn ? 'Creating account...' : 'Create account'}
                   </button>
@@ -506,7 +568,7 @@ const SupplierAnalysisApp = () => {
                 <button
                   type="button"
                   onClick={() => setIsRegisterMode(!isRegisterMode)}
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
                 >
                   {isRegisterMode 
                     ? 'Already have an account? Sign in' 
@@ -530,7 +592,7 @@ const SupplierAnalysisApp = () => {
         <div className="hidden lg:block relative flex-1 bg-gray-50">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <BarChart3 className="mx-auto h-32 w-32 text-gray-300 mb-8" />
+              <BarChart3 className="mx-auto h-32 w-32 text-gray-300 mb-8 transform transition-all duration-300 hover:scale-110" />
               <h3 className="text-2xl font-semibold text-gray-700 mb-4">
                 Supplier Performance Analytics
               </h3>
@@ -544,14 +606,14 @@ const SupplierAnalysisApp = () => {
     );
   }
 
-  // Interface principale style ChatGPT
+  // Interface principale style ChatGPT avec animations
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900 text-white transition-all duration-200 flex flex-col`}>
+      {/* Sidebar avec animations */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
         <div className="p-4">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center transform transition-all duration-300 hover:scale-110">
               <BarChart3 className="h-5 w-5 text-gray-900" />
             </div>
             {sidebarOpen && (
@@ -562,29 +624,31 @@ const SupplierAnalysisApp = () => {
 
         <nav className="flex-1 px-4 space-y-2">
           <button
-            onClick={() => setCurrentView('dashboard')}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-              currentView === 'dashboard' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+            onClick={() => navigateTo('dashboard')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200 transform hover:scale-105 ${
+              currentView === 'dashboard' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
             }`}
           >
             <Home className="h-5 w-5" />
             {sidebarOpen && <span>Dashboard</span>}
+            {sidebarOpen && currentView === 'dashboard' && <ChevronRight className="h-4 w-4 ml-auto" />}
           </button>
           
           <button
-            onClick={() => setCurrentView('history')}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-              currentView === 'history' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+            onClick={() => navigateTo('history')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-all duration-200 transform hover:scale-105 ${
+              currentView === 'history' ? 'bg-gray-800 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
             }`}
           >
             <History className="h-5 w-5" />
             {sidebarOpen && <span>Analysis History</span>}
+            {sidebarOpen && currentView === 'history' && <ChevronRight className="h-4 w-4 ml-auto" />}
           </button>
         </nav>
 
         <div className="p-4 border-t border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center transform transition-all duration-300 hover:scale-110">
               <User className="h-5 w-5" />
             </div>
             {sidebarOpen && (
@@ -592,7 +656,7 @@ const SupplierAnalysisApp = () => {
                 <p className="text-sm font-medium">{user?.firstName || user?.email}</p>
                 <button
                   onClick={handleLogout}
-                  className="text-xs text-gray-400 hover:text-white"
+                  className="text-xs text-gray-400 hover:text-white transition-colors duration-200"
                 >
                   Sign out
                 </button>
@@ -602,14 +666,14 @@ const SupplierAnalysisApp = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content avec animations */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        {/* Header animé */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-md hover:bg-gray-100"
+              className="p-2 rounded-md hover:bg-gray-100 transition-all duration-200 transform hover:scale-110"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -617,8 +681,8 @@ const SupplierAnalysisApp = () => {
             <div className="flex items-center space-x-4">
               {analysisResults && (
                 <button
-                  onClick={() => setCurrentView('dashboard')}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  onClick={() => navigateTo('dashboard')}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 hover:shadow-md"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   New Analysis
@@ -628,8 +692,8 @@ const SupplierAnalysisApp = () => {
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto">
+        {/* Content Area avec transitions */}
+        <main className={`flex-1 overflow-auto transition-all duration-300 ${pageTransition ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
           {currentView === 'dashboard' && (
             <div className="max-w-4xl mx-auto py-8 px-6">
               <div className="text-center mb-12">
@@ -642,19 +706,32 @@ const SupplierAnalysisApp = () => {
               </div>
 
               {error && (
-                <div className="mb-6 rounded-md bg-red-50 p-4">
+                <div className="mb-6 rounded-md bg-red-50 p-4 animate-pulse">
                   <div className="text-sm text-red-700">{error}</div>
                 </div>
               )}
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8 transform transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-12 text-center transition-all duration-300 ${
+                    isDragging 
+                      ? 'border-blue-500 bg-blue-50 scale-105' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <div className="transform transition-all duration-300 hover:scale-110">
+                    <Upload className={`mx-auto h-12 w-12 mb-4 transition-colors duration-300 ${
+                      isDragging ? 'text-blue-500' : 'text-gray-400'
+                    }`} />
+                  </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
                     Upload your supplier data
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    Supported formats: Excel (.xlsx, .xls) and CSV (.csv)
+                    Drag and drop your file here, or click to browse
                   </p>
                   <input
                     type="file"
@@ -665,14 +742,14 @@ const SupplierAnalysisApp = () => {
                   />
                   <label
                     htmlFor="file-upload"
-                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 cursor-pointer"
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
                   >
                     Choose file
                   </label>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transform transition-all duration-300 hover:shadow-lg hover:scale-[1.01]">
                 <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                   <FileSpreadsheet className="h-5 w-5 mr-2" />
                   Excel Template
@@ -681,34 +758,16 @@ const SupplierAnalysisApp = () => {
                   <div>
                     <h4 className="font-medium text-gray-700 mb-3">Required columns:</h4>
                     <ul className="text-sm text-gray-600 space-y-2">
-                      <li className="flex items-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
-                        Order number
-                      </li>
-                      <li className="flex items-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
-                        Expected date
-                      </li>
-                      <li className="flex items-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
-                        Actual date
-                      </li>
-                      <li className="flex items-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
-                        Quality status
-                      </li>
-                      <li className="flex items-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
-                        Amount
-                      </li>
-                      <li className="flex items-center">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
-                        Issues encountered
-                      </li>
+                      {['Order number', 'Expected date', 'Actual date', 'Quality status', 'Amount', 'Issues encountered'].map((item, index) => (
+                        <li key={index} className="flex items-center">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
+                          {item}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                   <div>
-                    <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 hover:shadow-md">
                       <Download className="h-4 w-4 mr-2" />
                       Download template
                     </button>
@@ -718,9 +777,20 @@ const SupplierAnalysisApp = () => {
 
               {isAnalyzing && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg p-8 max-w-md mx-4">
+                  <div className="bg-white rounded-lg p-8 max-w-md mx-4 transform transition-all duration-300">
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                      <div className="relative mb-6">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-xs font-medium text-gray-600">{Math.round(uploadProgress)}%</div>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                        <div 
+                          className="bg-black h-2 rounded-full transition-all duration-500 ease-out"
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
                         Analyzing your data...
                       </h3>
@@ -731,6 +801,161 @@ const SupplierAnalysisApp = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {currentView === 'results' && analysisResults && (
+            <div className="max-w-6xl mx-auto py-8 px-6">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Analysis Results: {analysisResults.supplier_name}
+                </h1>
+                <p className="text-gray-600">
+                  Generated on {new Date(analysisResults.created_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              {/* KPIs Dashboard avec animations */}
+              <div className="grid lg:grid-cols-4 gap-6 mb-8">
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer transform transition-all duration-300 hover:shadow-lg hover:scale-105"
+                  onClick={() => openKPIModal('delivery')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">On-time Delivery</p>
+                      <p className="text-3xl font-bold mt-2 text-orange-600">
+                        {analysisResults.on_time_rate}%
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <div className="transform transition-transform duration-300 hover:scale-110">
+                      <Clock className="h-8 w-8 text-orange-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer transform transition-all duration-300 hover:shadow-lg hover:scale-105"
+                  onClick={() => openKPIModal('quality')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Quality Score</p>
+                      <p className="text-3xl font-bold mt-2 text-blue-600">
+                        {analysisResults.quality_rate}%
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <div className="transform transition-transform duration-300 hover:scale-110">
+                      <Target className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer transform transition-all duration-300 hover:shadow-lg hover:scale-105"
+                  onClick={() => openKPIModal('orders')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                      <p className="text-3xl font-bold mt-2 text-green-600">
+                        {analysisResults.total_orders}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <div className="transform transition-transform duration-300 hover:scale-110">
+                      <BarChart3 className="h-8 w-8 text-green-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer transform transition-all duration-300 hover:shadow-lg hover:scale-105"
+                  onClick={() => openKPIModal('costs')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Cost Impact</p>
+                      <p className="text-3xl font-bold mt-2 text-red-600">
+                        €{analysisResults.total_cost_issues}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
+                    </div>
+                    <div className="transform transition-transform duration-300 hover:scale-110">
+                      <AlertTriangle className="h-8 w-8 text-red-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Generated Messages avec animations */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                  <Mail className="h-5 w-5 mr-3" />
+                  AI-Generated Communications
+                </h2>
+                
+                <div className="grid lg:grid-cols-3 gap-6">
+                  <div className="border border-gray-200 rounded-lg p-4 transform transition-all duration-300 hover:shadow-md hover:scale-105">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Users className="h-4 w-4 mr-2 text-blue-600" />
+                      For Supplier
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.supplier_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.supplier_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4 transform transition-all duration-300 hover:shadow-md hover:scale-105">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <Target className="h-4 w-4 mr-2 text-green-600" />
+                      For Procurement Team
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.buyer_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.buyer_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4 transform transition-all duration-300 hover:shadow-md hover:scale-105">
+                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                      <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
+                      Executive Summary
+                    </h3>
+                    <div className="bg-gray-50 rounded-md p-3 mb-3">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                        {analysisResults.management_message}
+                      </pre>
+                    </div>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(analysisResults.management_message)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105"
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -769,8 +994,8 @@ const SupplierAnalysisApp = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {analysisHistory.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-50">
+                      {analysisHistory.map((item, index) => (
+                        <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-200">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">{item.supplier_name}</div>
                           </td>
@@ -789,7 +1014,7 @@ const SupplierAnalysisApp = () => {
                             <div className="text-sm text-gray-900">{item.quality_rate}%</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-all duration-200 ${
                               item.risk_level === 'FAIBLE' ? 'bg-green-100 text-green-800' :
                               item.risk_level === 'MODÉRÉ' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
@@ -805,160 +1030,13 @@ const SupplierAnalysisApp = () => {
               )}
             </div>
           )}
-
-          {currentView === 'results' && analysisResults && (
-            <div className="max-w-6xl mx-auto py-8 px-6">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Analysis Results: {analysisResults.supplier_name}
-                </h1>
-                <p className="text-gray-600">
-                  Generated on {new Date(analysisResults.created_at).toLocaleDateString()}
-                </p>
-              </div>
-
-              {/* KPIs Dashboard avec graphiques */}
-              <div className="grid lg:grid-cols-4 gap-6 mb-8">
-                <div 
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
-                  onClick={() => openKPIModal('delivery')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">On-time Delivery</p>
-                      <p className="text-3xl font-bold text-orange-600 mt-2">
-                        {analysisResults.on_time_rate}%
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
-                    </div>
-                    <Clock className="h-8 w-8 text-orange-600" />
-                  </div>
-                </div>
-                
-                <div 
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
-                  onClick={() => openKPIModal('quality')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Quality Score</p>
-                      <p className="text-3xl font-bold text-blue-600 mt-2">
-                        {analysisResults.quality_rate}%
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
-                    </div>
-                    <Target className="h-8 w-8 text-blue-600" />
-                  </div>
-                </div>
-                
-                <div 
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
-                  onClick={() => openKPIModal('orders')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                      <p className="text-3xl font-bold text-green-600 mt-2">
-                        {analysisResults.total_orders}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
-                    </div>
-                    <BarChart3 className="h-8 w-8 text-green-600" />
-                  </div>
-                </div>
-                
-                <div 
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200"
-                  onClick={() => openKPIModal('costs')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Cost Impact</p>
-                      <p className="text-3xl font-bold text-red-600 mt-2">
-                        €{analysisResults.total_cost_issues}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">Click for details</p>
-                    </div>
-                    <AlertTriangle className="h-8 w-8 text-red-600" />
-                  </div>
-                </div>
-              </div>
-
-              {/* AI Generated Messages */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                  <Mail className="h-5 w-5 mr-3" />
-                  AI-Generated Communications
-                </h2>
-                
-                <div className="grid lg:grid-cols-3 gap-6">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-                      <Users className="h-4 w-4 mr-2 text-blue-600" />
-                      For Supplier
-                    </h3>
-                    <div className="bg-gray-50 rounded-md p-3 mb-3">
-                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                        {analysisResults.supplier_message}
-                      </pre>
-                    </div>
-                    <button 
-                      onClick={() => navigator.clipboard.writeText(analysisResults.supplier_message)}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Download className="h-3 w-3 mr-1" />
-                      Copy
-                    </button>
-                  </div>
-                  
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-                      <Target className="h-4 w-4 mr-2 text-green-600" />
-                      For Procurement Team
-                    </h3>
-                    <div className="bg-gray-50 rounded-md p-3 mb-3">
-                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                        {analysisResults.buyer_message}
-                      </pre>
-                    </div>
-                    <button 
-                      onClick={() => navigator.clipboard.writeText(analysisResults.buyer_message)}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Download className="h-3 w-3 mr-1" />
-                      Copy
-                    </button>
-                  </div>
-                  
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-                      <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
-                      Executive Summary
-                    </h3>
-                    <div className="bg-gray-50 rounded-md p-3 mb-3">
-                      <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                        {analysisResults.management_message}
-                      </pre>
-                    </div>
-                    <button 
-                      onClick={() => navigator.clipboard.writeText(analysisResults.management_message)}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Download className="h-3 w-3 mr-1" />
-                      Copy
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </main>
       </div>
 
-      {/* KPI Detail Modal */}
+      {/* KPI Detail Modal avec animations */}
       {showKPIModal && selectedKPI && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{selectedKPI.title}</h2>
@@ -966,7 +1044,7 @@ const SupplierAnalysisApp = () => {
               </div>
               <button
                 onClick={closeKPIModal}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-all duration-200 transform hover:scale-110"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -976,7 +1054,7 @@ const SupplierAnalysisApp = () => {
               {/* Chart Section */}
               <div className="mb-8">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Overview</h3>
-                <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-gray-50 rounded-lg p-6 transform transition-all duration-300 hover:shadow-inner">
                   {selectedKPI.title === 'Delivery Performance Analysis' && (
                     <BarChart data={selectedKPI.data} />
                   )}
@@ -993,7 +1071,7 @@ const SupplierAnalysisApp = () => {
               </div>
 
               {/* Insights Section */}
-              <div className="bg-blue-50 rounded-lg p-6 mb-6">
+              <div className="bg-blue-50 rounded-lg p-6 mb-6 transform transition-all duration-300 hover:shadow-md">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
                   <AlertCircle className="h-5 w-5 mr-2 text-blue-600" />
                   Key Insights & Recommendations
@@ -1010,15 +1088,15 @@ const SupplierAnalysisApp = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3">
-                <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 transform hover:scale-105">
                   <Download className="h-4 w-4 mr-2" />
                   Export Data
                 </button>
-                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105">
                   <Mail className="h-4 w-4 mr-2" />
                   Share Report
                 </button>
-                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 transform hover:scale-105">
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Follow-up
                 </button>
