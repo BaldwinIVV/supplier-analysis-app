@@ -156,16 +156,22 @@ const getAnalysis = async (req, res) => {
   }
 };
 
-// Exécuter l'analyse IA
+// Exécuter l'analyse IA - VERSION CORRIGÉE
 const runAnalysis = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
 
+    console.log('Starting AI analysis for analysis:', id);
+
     // Vérifier que l'analyse existe et appartient à l'utilisateur
     const analysis = await prisma.analysis.findFirst({
       where: { id, userId },
-      include: { suppliers: true }
+      include: { 
+        suppliers: {
+          orderBy: { createdAt: 'asc' }
+        }
+      }
     });
 
     if (!analysis) {
@@ -178,103 +184,229 @@ const runAnalysis = async (req, res) => {
     if (analysis.suppliers.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Aucun fournisseur à analyser'
+        message: 'Aucun fournisseur à analyser. Veuillez d\'abord importer des données.'
       });
     }
 
-    // Mettre à jour le statut
+    console.log('Found', analysis.suppliers.length, 'suppliers for analysis');
+
+    // Mettre à jour le statut à PROCESSING
     await prisma.analysis.update({
       where: { id },
       data: { status: 'PROCESSING' }
     });
 
     try {
+      // Vérifier la qualité des données avant l'analyse
+      const validSuppliers = analysis.suppliers.filter(supplier => {
+        const isValid = supplier.name && 
+                       supplier.product && 
+                       typeof supplier.quality === 'number' && 
+                       typeof supplier.deliveryDelay === 'number' && 
+                       typeof supplier.price === 'number' &&
+                       typeof supplier.quantity === 'number';
+        
+        if (!isValid) {
+          console.warn('Invalid supplier data found:', supplier);
+        }
+        return isValid;
+      });
+
+      if (validSuppliers.length === 0) {
+        throw new Error('Aucun fournisseur avec des données valides trouvé');
+      }
+
+      console.log('Valid suppliers for AI analysis:', validSuppliers.length);
+
       // Analyser avec l'IA
-      const aiAnalysis = await aiService.analyzeSupplierPerformance(analysis.suppliers);
+      const aiAnalysis = await aiService.analyzeSupplierPerformance(validSuppliers);
+      console.log('AI analysis completed successfully');
 
       // Mettre à jour les fournisseurs avec les résultats
-      const updatePromises = analysis.suppliers.map(supplier => {
+      const updatePromises = [];
+      
+      for (let i = 0; i < validSuppliers.length; i++) {
+        const supplier = validSuppliers[i];
         const supplierAnalysis = aiAnalysis.supplierAnalysis.find(
           sa => sa.name === supplier.name
         );
 
         if (supplierAnalysis) {
-          return prisma.supplier.update({
-            where: { id: supplier.id },
-            data: {
-              performance: supplierAnalysis.performanceScore,
-              category: supplierAnalysis.category
-            }
-          });
+          updatePromises.push(
+            prisma.supplier.update({
+              where: { id: supplier.id },
+              data: {
+                performance: supplierAnalysis.performanceScore,
+                category: supplierAnalysis.category
+              }
+            })
+          );
+        } else {
+          // Si pas de correspondance dans l'analyse IA, calculer un score basique
+          const basicScore = aiService.calculatePerformanceScore(supplier);
+          const basicCategory = aiService.categorizeSupplier(basicScore);
+          
+          updatePromises.push(
+            prisma.supplier.update({
+              where: { id: supplier.id },
+              data: {
+                performance: basicScore,
+                category: basicCategory
+              }
+            })
+          );
         }
-        return null;
-      });
+      }
 
-      await Promise.all(updatePromises.filter(Boolean));
+      await Promise.all(updatePromises);
+      console.log('Supplier data updated with analysis results');
 
       // Générer les messages
       const messages = await aiService.generateMessages(aiAnalysis, analysis.title);
+      console.log('Messages generated successfully');
 
       // Sauvegarder les messages
-      const messagePromises = [
-        prisma.message.create({
-          data: {
-            type: 'SUPPLIER',
-            content: JSON.stringify(messages.supplierMessage),
-            recipient: 'Fournisseurs',
-            analysisId: id
-          }
-        }),
-        prisma.message.create({
-          data: {
-            type: 'BUYER',
-            content: JSON.stringify(messages.buyerMessage),
-            recipient: 'Acheteurs',
-            analysisId: id
-          }
-        }),
-        prisma.message.create({
-          data: {
-            type: 'MANAGEMENT',
-            content: JSON.stringify(messages.managementMessage),
-            recipient: 'Direction',
-            analysisId: id
-          }
-        })
-      ];
+      const messagePromises = [];
+
+      if (messages.supplierMessage) {
+        messagePromises.push(
+          prisma.message.create({
+            data: {
+              type: 'SUPPLIER',
+              content: JSON.stringify(messages.supplierMessage),
+              recipient: 'Fournisseurs',
+              analysisId: id
+            }
+          })
+        );
+      }
+
+      if (messages.buyerMessage) {
+        messagePromises.push(
+          prisma.message.create({
+            data: {
+              type: 'BUYER',
+              content: JSON.stringify(messages.buyerMessage),
+              recipient: 'Acheteurs',
+              analysisId: id
+            }
+          })
+        );
+      }
+
+      if (messages.managementMessage) {
+        messagePromises.push(
+          prisma.message.create({
+            data: {
+              type: 'MANAGEMENT',
+              content: JSON.stringify(messages.managementMessage),
+              recipient: 'Direction',
+              analysisId: id
+            }
+          })
+        );
+      }
 
       await Promise.all(messagePromises);
+      console.log('Messages saved to database');
 
-      // Mettre à jour le statut final
+      // Mettre à jour le statut final avec résumé
       await prisma.analysis.update({
         where: { id },
         data: { 
           status: 'COMPLETED',
-          description: aiAnalysis.summary
+          description: aiAnalysis.summary || analysis.description
         }
       });
+
+      console.log('Analysis completed successfully');
 
       res.status(200).json({
         success: true,
         message: 'Analyse terminée avec succès',
         data: {
           analysis: aiAnalysis,
-          messages
+          messages,
+          suppliersUpdated: updatePromises.length,
+          messagesCreated: messagePromises.length
         }
       });
 
     } catch (aiError) {
+      console.error('AI analysis error:', aiError);
+      
       // En cas d'erreur IA, marquer comme échoué
       await prisma.analysis.update({
         where: { id },
         data: { status: 'FAILED' }
       });
 
-      throw aiError;
+      // Essayer de fournir une analyse basique si possible
+      if (analysis.suppliers.length > 0) {
+        try {
+          console.log('Attempting basic analysis fallback...');
+          
+          const basicAnalysis = aiService.performBasicAnalysis(analysis.suppliers);
+          
+          // Mettre à jour les performances avec les calculs basiques
+          const basicUpdatePromises = analysis.suppliers.map(supplier => {
+            const performanceScore = aiService.calculatePerformanceScore(supplier);
+            const category = aiService.categorizeSupplier(performanceScore);
+            
+            return prisma.supplier.update({
+              where: { id: supplier.id },
+              data: {
+                performance: performanceScore,
+                category: category
+              }
+            });
+          });
+
+          await Promise.all(basicUpdatePromises);
+
+          await prisma.analysis.update({
+            where: { id },
+            data: { 
+              status: 'COMPLETED',
+              description: 'Analyse basique effectuée (IA indisponible)'
+            }
+          });
+
+          return res.status(200).json({
+            success: true,
+            message: 'Analyse basique terminée (IA temporairement indisponible)',
+            data: {
+              analysis: basicAnalysis,
+              messages: null,
+              suppliersUpdated: basicUpdatePromises.length,
+              fallback: true
+            }
+          });
+
+        } catch (fallbackError) {
+          console.error('Fallback analysis also failed:', fallbackError);
+        }
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: `Erreur lors de l'analyse: ${aiError.message}`
+      });
     }
 
   } catch (error) {
     console.error('Run analysis error:', error);
+    
+    // Mettre à jour le statut en cas d'erreur générale
+    try {
+      await prisma.analysis.update({
+        where: { id: req.params.id },
+        data: { status: 'FAILED' }
+      });
+    } catch (updateError) {
+      console.error('Failed to update analysis status:', updateError);
+    }
+
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'exécution de l\'analyse'
@@ -376,4 +508,4 @@ module.exports = {
   runAnalysis,
   deleteAnalysis,
   getAnalysisStats
-}; 
+};
