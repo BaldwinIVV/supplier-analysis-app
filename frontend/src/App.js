@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History, X, Calendar, Plus, Menu, ChevronRight, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, TrendingUp, AlertTriangle, Clock, Target, Users, Mail, BarChart3, Download, LogOut, User, Home, History, X, Calendar, Plus, Menu, ChevronRight, AlertCircle, FileText, Trash2, Eye, Brain } from 'lucide-react';
 
 const SupplierAnalysisApp = () => {
   const [currentView, setCurrentView] = useState('login');
@@ -28,8 +28,90 @@ const SupplierAnalysisApp = () => {
     confirmPassword: ''
   });
 
+  // NOUVEAU: État pour la gestion des fichiers multiples
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+
   // URL de l'API backend
   const API_URL = 'https://supplier-analysis-app.onrender.com';
+
+  // NOUVEAU: Fonction pour lire le contenu d'un fichier
+  const readFileContent = async (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.readAsText(file);
+    });
+  };
+
+  // NOUVEAU: Fonction d'analyse IA pour un fichier spécifique
+  const analyzeFileWithAI = async (fileData) => {
+    setIsAnalyzing(true);
+    setError(null);
+
+    try {
+      const fileContent = await readFileContent(fileData.file);
+      
+      const prompt = `Analyze this supplier data and return JSON with this exact structure:
+{
+  "supplier_name": "string",
+  "on_time_rate": number,
+  "quality_rate": number,
+  "total_orders": number,
+  "total_cost_issues": number,
+  "risk_level": "FAIBLE/MODÉRÉ/ÉLEVÉ",
+  "supplier_message": "message for supplier",
+  "buyer_message": "message for procurement team", 
+  "management_message": "executive summary",
+  "created_at": "2024-01-15"
+}
+
+File content: ${fileContent}
+
+Return ONLY valid JSON.`;
+
+      const response = await window.claude.complete(prompt);
+      const aiResults = JSON.parse(response);
+      
+      // Mettre à jour le fichier comme analysé
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileData.id ? { ...f, status: 'analyzed', analysisResults: aiResults } : f
+      ));
+
+      // Mettre à jour les résultats principaux pour afficher immédiatement
+      setAnalysisResults(aiResults);
+      navigateTo('results');
+      
+    } catch (err) {
+      setError(`Analysis failed: ${err.message}`);
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileData.id ? { ...f, status: 'error' } : f
+      ));
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // NOUVEAU: Analyser un fichier spécifique
+  const analyzeSpecificFile = async (fileData) => {
+    setUploadedFiles(prev => prev.map(f => 
+      f.id === fileData.id ? { ...f, status: 'analyzing' } : f
+    ));
+    await analyzeFileWithAI(fileData);
+  };
+
+  // NOUVEAU: Supprimer un fichier
+  const removeFile = (fileId) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  // NOUVEAU: Formater la taille de fichier
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   // Données pour les modales KPI avec graphiques réels
   const getKPIDetails = (kpiType) => {
@@ -270,59 +352,27 @@ const SupplierAnalysisApp = () => {
     setCurrentView('login');
     setAnalysisResults(null);
     setAnalysisHistory([]);
+    setUploadedFiles([]); // NOUVEAU: Reset des fichiers
   };
 
+  // MODIFIÉ: Gestion des fichiers multiples
   const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
-    setIsAnalyzing(true);
-    setError(null);
+    const newFiles = files.map(file => ({
+      id: Date.now() + Math.random(),
+      file: file,
+      name: file.name,
+      size: file.size,
+      uploadDate: new Date().toISOString(),
+      status: 'uploaded',
+      analysisResults: null
+    }));
+
+    setUploadedFiles(prev => [...prev, ...newFiles]);
     setUploadProgress(0);
-
-    // Animation de progression simulée
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 200);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/analyze`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      });
-      const data = await response.json();
-      
-      // Compléter la progression
-      setUploadProgress(100);
-      
-      if (response.ok) {
-        setTimeout(() => {
-          setAnalysisResults(data);
-          navigateTo('results');
-          loadAnalysisHistory(token);
-        }, 500);
-      } else {
-        setError(data.message || 'Analysis failed');
-      }
-    } catch (error) {
-      setError('File processing error');
-    } finally {
-      setTimeout(() => {
-        setIsAnalyzing(false);
-        setUploadProgress(0);
-        clearInterval(progressInterval);
-      }, 1000);
-    }
+    setIsAnalyzing(false);
   };
 
   // Gestion du drag & drop
@@ -696,7 +746,7 @@ const SupplierAnalysisApp = () => {
                   Supplier Performance Analysis
                 </h1>
                 <p className="text-xl text-gray-600">
-                  Upload your Excel file for AI-powered insights and automated recommendations
+                  Upload your Excel files for AI-powered insights and automated recommendations
                 </p>
               </div>
 
@@ -706,6 +756,7 @@ const SupplierAnalysisApp = () => {
                 </div>
               )}
 
+              {/* Zone d'upload */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8 transform transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                 <div 
                   className={`border-2 border-dashed rounded-lg p-12 text-center transition-all duration-300 ${
@@ -726,11 +777,12 @@ const SupplierAnalysisApp = () => {
                     Upload your supplier data
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    Drag and drop your file here, or click to browse
+                    Drag and drop your files here, or click to browse (multiple files supported)
                   </p>
                   <input
                     type="file"
                     accept=".xlsx,.xls,.csv"
+                    multiple
                     className="hidden"
                     id="file-upload"
                     onChange={handleFileUpload}
@@ -739,11 +791,91 @@ const SupplierAnalysisApp = () => {
                     htmlFor="file-upload"
                     className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
                   >
-                    Choose file
+                    Choose files
                   </label>
                 </div>
               </div>
 
+              {/* NOUVEAU: Liste des fichiers uploadés */}
+              {uploadedFiles.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <FileText className="h-5 w-5 mr-2" />
+                    Uploaded Files ({uploadedFiles.length})
+                  </h3>
+                  <div className="space-y-4">
+                    {uploadedFiles.map((file) => (
+                      <div key={file.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <FileSpreadsheet className="h-8 w-8 text-blue-500" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {formatFileSize(file.size)} • {new Date(file.uploadDate).toLocaleString()}
+                            </p>
+                            {file.status === 'analyzed' && file.analysisResults && (
+                              <p className="text-xs text-green-600 mt-1">
+                                ✓ Analysis complete - {file.analysisResults.supplier_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {file.status === 'uploaded' && (
+                            <button
+                              onClick={() => analyzeSpecificFile(file)}
+                              disabled={isAnalyzing}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Brain className="h-3 w-3 mr-1" />
+                              Analyze with AI
+                            </button>
+                          )}
+                          {file.status === 'analyzing' && (
+                            <div className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600">
+                              <svg className="animate-spin h-3 w-3 mr-1" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                              </svg>
+                              Analyzing...
+                            </div>
+                          )}
+                          {file.status === 'analyzed' && (
+                            <div className="flex items-center space-x-2">
+                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                                ✓ Analyzed
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setAnalysisResults(file.analysisResults);
+                                  navigateTo('results');
+                                }}
+                                className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View Results
+                              </button>
+                            </div>
+                          )}
+                          {file.status === 'error' && (
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                              ✗ Error
+                            </span>
+                          )}
+                          <button
+                            onClick={() => removeFile(file.id)}
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Excel Template */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transform transition-all duration-300 hover:shadow-lg hover:scale-[1.01]">
                 <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
                   <FileSpreadsheet className="h-5 w-5 mr-2" />
@@ -770,6 +902,7 @@ const SupplierAnalysisApp = () => {
                 </div>
               </div>
 
+              {/* Loading overlay pendant l'analyse */}
               {isAnalyzing && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-300">
                   <div className="bg-white rounded-lg p-8 max-w-md mx-4 transform animate-in zoom-in-95 duration-300">
@@ -777,20 +910,14 @@ const SupplierAnalysisApp = () => {
                       <div className="relative mb-6">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="text-xs font-medium text-gray-600">{Math.round(uploadProgress)}%</div>
+                          <Brain className="h-6 w-6 text-gray-600" />
                         </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                        <div 
-                          className="bg-black h-2 rounded-full transition-all duration-500 ease-out"
-                          style={{ width: `${uploadProgress}%` }}
-                        ></div>
-                      </div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Analyzing your data...
+                        AI is analyzing your data...
                       </h3>
                       <p className="text-gray-600">
-                        Our AI is processing your supplier performance data
+                        Processing supplier performance data with Claude AI
                       </p>
                     </div>
                   </div>
@@ -882,7 +1009,7 @@ const SupplierAnalysisApp = () => {
                 </p>
               </div>
 
-              {/* KPIs Dashboard avec animations */}
+              {/* KPIs Dashboard */}
               <div className="grid lg:grid-cols-4 gap-6 mb-8">
                 {[
                   { key: 'delivery', value: analysisResults.on_time_rate, suffix: '%', label: 'On-time Delivery', icon: Clock, color: 'orange', delay: 0 },
@@ -901,7 +1028,7 @@ const SupplierAnalysisApp = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-gray-600">{kpi.label}</p>
-                          <p className={`text-3xl font-bold mt-2 text-${kpi.color}-600`}>
+                          <p className="text-3xl font-bold mt-2 text-gray-900">
                             {kpi.value}{kpi.suffix}
                           </p>
                           <p className="text-xs text-gray-500 mt-2">
@@ -909,7 +1036,7 @@ const SupplierAnalysisApp = () => {
                           </p>
                         </div>
                         <div className="transform transition-transform duration-300 hover:scale-110">
-                          <Icon className={`h-8 w-8 text-${kpi.color}-600`} />
+                          <Icon className="h-8 w-8 text-gray-500" />
                         </div>
                       </div>
                     </div>
