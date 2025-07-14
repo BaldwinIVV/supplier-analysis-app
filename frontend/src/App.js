@@ -284,66 +284,60 @@ Return ONLY valid JSON.`;
     }, 150);
   };
 
-  // Fonctions d'authentification
+  // Fonctions d'authentification (simulées pour le développement)
   const handleLogin = async (email, password) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setUser(data.user);
-        localStorage.setItem('token', data.token);
-        setCurrentView('dashboard');
-        loadAnalysisHistory(data.token);
-        return true;
-      } else {
-        setError(data.message || 'Authentication failed');
-        return false;
-      }
-    } catch (error) {
-      setError('Connection error');
+    setIsLoggingIn(true);
+    
+    // Simulation d'authentification pour le développement
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Accepter n'importe quel email/password pour les tests
+    if (email && password) {
+      const mockUser = {
+        id: 1,
+        email: email,
+        firstName: email.split('@')[0] || 'User',
+        lastName: 'Demo',
+        role: 'Admin'
+      };
+      
+      setUser(mockUser);
+      localStorage.setItem('token', 'demo-token-' + Date.now());
+      setCurrentView('dashboard');
+      setError(null);
+      return true;
+    } else {
+      setError('Please enter email and password');
       return false;
     }
   };
 
   const handleRegister = async (userData) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setUser(data.user);
-        localStorage.setItem('token', data.token);
-        setCurrentView('dashboard');
-        return true;
-      } else {
-        setError(data.message || 'Registration failed');
-        return false;
-      }
-    } catch (error) {
-      setError('Connection error');
-      return false;
-    }
+    setIsLoggingIn(true);
+    
+    // Simulation d'inscription pour le développement  
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const mockUser = {
+      id: 1,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: 'User'
+    };
+    
+    setUser(mockUser);
+    localStorage.setItem('token', 'demo-token-' + Date.now());
+    setCurrentView('dashboard');
+    setError(null);
+    return true;
   };
 
   const loadAnalysisHistory = async (token) => {
-    try {
-      const response = await fetch(`${API_URL}/api/analyses`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setAnalysisHistory(data);
-      }
-    } catch (error) {
-      console.error('Error loading history:', error);
-    }
+    // Simulation de chargement d'historique
+    console.log('Loading analysis history...');
+    // Pour l'instant, on garde un historique vide
+    // L'historique se remplira avec les analyses IA
   };
 
   const handleLogout = () => {
@@ -422,27 +416,19 @@ Return ONLY valid JSON.`;
     setIsLoggingIn(false);
   };
 
-  // Vérifier l'authentification au chargement
+  // Vérifier l'authentification au chargement (simplifié)
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      fetch(`${API_URL}/api/auth/verify`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        }
-        throw new Error('Invalid token');
-      })
-      .then(data => {
-        setUser(data.user);
-        setCurrentView('dashboard');
-        loadAnalysisHistory(token);
-      })
-      .catch(() => {
-        localStorage.removeItem('token');
+    if (token && token.startsWith('demo-token-')) {
+      // Reconnecter automatiquement l'utilisateur demo
+      setUser({
+        id: 1,
+        email: 'demo@test.com',
+        firstName: 'Demo',
+        lastName: 'User',
+        role: 'Admin'
       });
+      setCurrentView('dashboard');
     }
   }, []);
 
@@ -624,9 +610,9 @@ Return ONLY valid JSON.`;
               {!isRegisterMode && (
                 <div className="mt-6 rounded-md bg-gray-50 p-4">
                   <div className="text-sm text-gray-600">
-                    <p className="font-medium mb-1">Demo account:</p>
-                    <p>Email: demo@test.com</p>
-                    <p>Password: Demo123!</p>
+                    <p className="font-medium mb-1">Pour tester :</p>
+                    <p>Email : n'importe quel email</p>
+                    <p>Password : n'importe quel mot de passe</p>
                   </div>
                 </div>
               )}
