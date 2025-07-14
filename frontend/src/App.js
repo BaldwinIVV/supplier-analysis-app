@@ -286,8 +286,6 @@ Return ONLY valid JSON.`;
 
   // Fonctions d'authentification (simulées pour le développement)
   const handleLogin = async (email, password) => {
-    setIsLoggingIn(true);
-    
     // Simulation d'authentification pour le développement
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -313,8 +311,6 @@ Return ONLY valid JSON.`;
   };
 
   const handleRegister = async (userData) => {
-    setIsLoggingIn(true);
-    
     // Simulation d'inscription pour le développement  
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -394,26 +390,39 @@ Return ONLY valid JSON.`;
     e.preventDefault();
     setIsLoggingIn(true);
     setError(null);
-    await handleLogin(email, password);
-    setIsLoggingIn(false);
+    
+    try {
+      await handleLogin(email, password);
+    } catch (err) {
+      setError('Login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   const onSubmitRegister = async (e) => {
     e.preventDefault();
     setIsLoggingIn(true);
     setError(null);
+    
     if (registerData.password !== registerData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoggingIn(false);
       return;
     }
-    await handleRegister({
-      firstName: registerData.firstName,
-      lastName: registerData.lastName,
-      email: registerData.email,
-      password: registerData.password,
-    });
-    setIsLoggingIn(false);
+    
+    try {
+      await handleRegister({
+        firstName: registerData.firstName,
+        lastName: registerData.lastName,
+        email: registerData.email,
+        password: registerData.password,
+      });
+    } catch (err) {
+      setError('Registration failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   // Vérifier l'authentification au chargement (simplifié)
